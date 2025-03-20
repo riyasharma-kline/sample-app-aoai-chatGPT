@@ -930,8 +930,8 @@ const Chat = () => {
                       ? styles.clearChatBroom
                       : styles.clearChatBroomNoCosmos
                   }
-                  //update broom position to align it with textfield
-                  style={{top:linesRef>5?`${Math.min(200, linesRef * 20)-30}px`:'80px'}}
+                  //update broom position to align it with textfield if no cosmos db is used
+                  // style={{top:linesRef>5?`${Math.min(200, linesRef * 20)-30}px`:'80px'}}
                   iconProps={{ iconName: 'Broom' }}
                   onClick={
                     appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
