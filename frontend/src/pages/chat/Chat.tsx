@@ -109,7 +109,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
-      setLogo('https://klinegroup.com/wp-content/uploads/klinecompany-logo.svg')
+      setLogo(ui?.chat_logo || ui?.logo || Contoso)
     }
   }, [appStateContext?.state.isLoading])
 
@@ -798,8 +798,8 @@ const Chat = () => {
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
-                <h1 className={styles.chatEmptyStateTitle}>Write it the Kline way</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>Check grammar and punctuation, rewrite, translate or summarise with the power of AI</h2>
+                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
+                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
