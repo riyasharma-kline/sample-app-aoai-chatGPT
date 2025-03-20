@@ -905,6 +905,7 @@ const Chat = () => {
                     onClick={newChat}
                     disabled={disabledButton()}
                     aria-label="start a new chat button"
+                    title="Save chat and start new"
                   />
                 )}
                 <CommandBarButton
@@ -940,6 +941,7 @@ const Chat = () => {
                   }
                   disabled={disabledButton()}
                   aria-label="clear chat button"
+                  title="Clear this chat"
                 />
                 <Dialog
                   hidden={hideErrorDialog}
