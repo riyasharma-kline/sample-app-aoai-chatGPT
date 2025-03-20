@@ -98,7 +98,8 @@ const Chat = () => {
       toggleErrorDialog()
     }
   }, [appStateContext?.state.isCosmosDBAvailable])
-
+  const [linesRef, setLinesRef] = useState<number>(1); //stores number of lines in the textfield
+  useEffect(() => {}, [linesRef]); //refreshes the linesRef value to get immediate value in the variable
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
     setTimeout(() => {
@@ -108,7 +109,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
-      setLogo(ui?.chat_logo || ui?.logo || Contoso)
+      setLogo('https://klinegroup.com/wp-content/uploads/klinecompany-logo.svg')
     }
   }, [appStateContext?.state.isLoading])
 
@@ -178,8 +179,8 @@ const Chat = () => {
         : setMessages([...messages, toolMessage, assistantMessage])
     }
   }
-
   const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
+    setLinesRef(1);
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -307,6 +308,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
+    setLinesRef(1);
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -756,6 +758,10 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     )
   }
+   //gets updated number of lines in the textfield from parent component
+   const handleQuestionInputChange = (lines: number) => {
+    setLinesRef(lines);
+  };
 
   return (
     <div className={styles.container} role="main">
@@ -792,8 +798,8 @@ const Chat = () => {
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
-                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                <h1 className={styles.chatEmptyStateTitle}>Write it the Kline way</h1>
+                <h2 className={styles.chatEmptyStateSubtitle}>Check grammar and punctuation, rewrite, translate or summarise with the power of AI</h2>
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
@@ -850,7 +856,15 @@ const Chat = () => {
               </div>
             )}
 
-            <Stack horizontal className={styles.chatInput}>
+            <Stack horizontal className={styles.chatInput}
+             //after 5 lines, the textfield will start to expand upwards till 200px.
+               style={{
+                 flex:
+                   linesRef > 5
+                     ? `0 0 ${Math.min(200, linesRef * 20)-30}px`
+                     : "0 0 80px",
+               }}
+             >
               {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
@@ -916,6 +930,8 @@ const Chat = () => {
                       ? styles.clearChatBroom
                       : styles.clearChatBroomNoCosmos
                   }
+                  //update broom position to align it with textfield
+                  style={{top:linesRef>5?`${Math.min(200, linesRef * 20)-30}px`:'80px'}}
                   iconProps={{ iconName: 'Broom' }}
                   onClick={
                     appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
@@ -943,6 +959,7 @@ const Chat = () => {
                 conversationId={
                   appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
                 }
+                onInputChange={handleQuestionInputChange}
               />
             </Stack>
           </div>
