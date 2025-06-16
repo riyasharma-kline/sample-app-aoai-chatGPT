@@ -7,7 +7,8 @@ import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
-
+import Translate from '../../pages/translate/Translate'
+import Chat from '../chat/Chat'
 import styles from './Layout.module.css'
 
 const Layout = () => {
@@ -18,6 +19,7 @@ const Layout = () => {
   const [hideHistoryLabel, setHideHistoryLabel] = useState<string>('Hide chat history')
   const [showHistoryLabel, setShowHistoryLabel] = useState<string>('Show chat history')
   const [logo, setLogo] = useState('')
+  const [activeTab, setActiveTab] = useState<'chat' | 'translate'>('chat') // <-- NEW STATE
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
 
@@ -83,6 +85,21 @@ const Layout = () => {
             <h1 className={styles.headerTitle}>{ui?.title}</h1>
             </Link>
           </Stack>
+          <div className={styles.tabContainer}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'chat' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('chat')}
+            >
+              Chat
+            </button>
+            
+            <button
+              className={`${styles.tabButton} ${activeTab === 'translate' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('translate')}
+            >
+              Translate
+            </button>
+          </div>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
@@ -94,7 +111,11 @@ const Layout = () => {
           </Stack>
         </Stack>
       </header>
-      <Outlet />
+        {activeTab === 'chat' ? (
+          <Chat /> 
+        ) : (
+          <Translate /> 
+        )}
       <Dialog
         onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}

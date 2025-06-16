@@ -16,6 +16,22 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
 
   return response
 }
+export async function translateApi(file: File, language: string, abortSignal?: AbortSignal): Promise<Blob> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('language', language)
+
+  const response = await fetch('/translate', {
+    method: 'POST',    body: formData,
+    signal: abortSignal 
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Translation failed: ${response.status} ${errorText}`)
+  }
+  return await response.blob()
+}
 
 export async function getUserInfo(): Promise<UserInfo[]> {
   const response = await fetch('/.auth/me')

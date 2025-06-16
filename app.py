@@ -39,12 +39,299 @@ from backend.utils import (
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
+import os
+import requests
+from pptx import Presentation
+import tiktoken
+from dotenv import load_dotenv
+import tempfile
+from quart import Blueprint, request, jsonify, send_file
+import asyncio
+from pptx.util import Pt
+
+
+load_dotenv()
+
+# Constants
+TOKEN_LIMIT = 3500 
+MAX_RETRIES = 3
+AZURE_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_MODEL_NAME")
+API_VERSION = os.getenv("AZURE_OPENAI_PREVIEW_API_VERSION")
+HEADERS = {
+    "Content-Type": "application/json",
+    "api-key": os.getenv("AZURE_OPENAI_KEY")
+}
+
+GLOSSARY = {
+}
+
+def estimate_token_count(text):
+    """Estimate the token count of a given text."""
+    encoding = tiktoken.get_encoding("cl100k_base") 
+    token_count = len(encoding.encode(text))
+    print(f"Estimated token count for text: {token_count}")
+    return token_count
+
+def apply_glossary(text):
+    """Replace predefined terms before translation while handling case variations."""
+    for term, translation in GLOSSARY.items():
+        text = text.replace(term, translation).replace(term.lower(), translation)
+    return text.strip()
+
+def split_into_batches(texts, token_limit):
+    """Splits the text into batches while maintaining the token limit."""
+    batches = []
+    current_batch = []
+    current_tokens = 0
+
+    for text in texts:
+        tokens = estimate_token_count(text)
+        if tokens > token_limit:
+            print(f"⚠️ Skipping text - Token count {tokens} exceeds limit {token_limit}")
+            continue
+        if current_tokens + tokens > token_limit and current_batch:
+            batches.append(current_batch)
+            current_batch = []
+            current_tokens = 0
+        current_batch.append(text)
+        current_tokens += tokens
+
+    if current_batch:
+        batches.append(current_batch)
+
+    print(f"Total batches formed: {len(batches)}")
+    return batches
+
+def translate_text_batch(texts, target_language):
+    texts = [text.strip() for text in texts if text.strip()]
+    if not texts:
+        return texts
+
+    api_url = f"{AZURE_ENDPOINT}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
+    combined_text = "\n\n".join(texts)
+
+    token_count = estimate_token_count(combined_text)
+    if token_count > TOKEN_LIMIT:
+        print(f"⚠️ Skipping batch due to token limit: {token_count}")
+        return None
+
+    combined_text = apply_glossary(combined_text)
+
+    body = {
+        "messages": [
+            {"role": "system", "content": (
+                f"You are a professional translator specializing in {target_language}. "
+                "Translate the following English text very accurately. "
+                "Do not alter numbers, formatting, or structure. Do not translate 'Kline' word. Keep it as it is.\n\n"
+            )},
+            {"role": "user", "content": f"Translate this into {target_language}:\n{combined_text}"}
+        ],
+        "max_tokens": 4000,
+        "temperature": 0,
+        "stream": False,
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(api_url, headers=HEADERS, json=body, timeout=30)
+            data = response.json()
+            if response.status_code == 200 and "choices" in data:
+                return data["choices"][0]["message"]["content"].split("\n\n")
+            else:
+                print(f"⚠️ API Error: {data}")
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request Error (Attempt {attempt + 1}): {e}")
+
+    print("❌ Translation failed after retries.")
+    return None
+
+def replace_text_in_ref(obj, new_text):
+    from pptx.dml.color import RGBColor
+
+    def get_font_color(font):
+        try:
+            if font.color and hasattr(font.color, "rgb") and font.color.rgb:
+                return font.color.rgb
+        except Exception:
+            pass
+        return None
+
+    # Handle table cell or text frame paragraph
+    if hasattr(obj, "text_frame"):  # Table cell or shape with text_frame
+        tf = obj.text_frame
+        # Remove all paragraphs except the first
+        while len(tf.paragraphs) > 1:
+            tf._element.remove(tf.paragraphs[-1]._element)
+        para = tf.paragraphs[0]
+        # Save formatting from first run if exists
+        if para.runs:
+            original_run = para.runs[0]
+            font = original_run.font
+            size = font.size
+            name = font.name
+            bold = font.bold
+            italic = font.italic
+            color = get_font_color(font)
+        else:
+            size = name = bold = italic = color = None
+        bullet_level = para.level
+        # Remove all runs and text
+        para.clear()
+        # Add translated text
+        run = para.add_run()
+        run.text = new_text
+        font = run.font
+        if size:
+            font.size = size
+        if name:
+            font.name = name
+        if bold is not None:
+            font.bold = bold
+        if italic is not None:
+            font.italic = italic
+        if color:
+            font.color.rgb = color
+
+        para.level = bullet_level
+        if hasattr(para, "bullet"):
+            para.bullet = bullet_level is not None
+    elif hasattr(obj, "runs"):  # Standalone paragraph
+        para = obj
+        # Save formatting from first run if exists
+        if para.runs:
+            original_run = para.runs[0]
+            font = original_run.font
+            size = font.size
+            name = font.name
+            bold = font.bold
+            italic = font.italic
+            color = get_font_color(font)
+        else:
+            size = name = bold = italic = color = None
+        bullet_level = para.level
+        # Remove all runs and text
+        para.clear()
+        # Add translated text
+        run = para.add_run()
+        run.text = new_text
+        font = run.font
+        if size:
+            font.size = size
+        if name:
+            font.name = name
+        if bold is not None:
+            font.bold = bold
+        if italic is not None:
+            font.italic = italic
+        if color:
+            font.color.rgb = color
+
+        para.level = bullet_level
+        if hasattr(para, "bullet"):
+            para.bullet = bullet_level is not None
+
+def translate_pptx(input_pptx, output_pptx, target_language):
+    # print(f"Translating PPTX to {target_language}...")	
+    prs = Presentation(input_pptx)
+    skipped_slides = []
+
+    for slide_index, slide in enumerate(prs.slides):
+        # print(f"\n📄 Processing Slide {slide_index + 1}")
+        text_items = [] 
+
+        # Collect all translatable text chunks from slide
+        for shape in slide.shapes:
+            if shape.has_text_frame:
+                for paragraph in shape.text_frame.paragraphs:
+                    text = " ".join(run.text for run in paragraph.runs).strip()
+                    if text:
+                        text_items.append((text, paragraph))
+            elif shape.has_table:
+                for row in shape.table.rows:
+                    for cell in row.cells:
+                        cell_text = cell.text.strip()
+                        if cell_text:
+                            text_items.append((cell_text, cell))
+
+        # Translate in small batches and replace immediately
+        batch = []
+        current_tokens = 0
+
+        for text, ref in text_items:
+            tokens = estimate_token_count(text)
+            if tokens > TOKEN_LIMIT:
+                print(f"⚠️ Skipping item with too many tokens: {tokens}")
+                continue
+            if current_tokens + tokens > TOKEN_LIMIT:
+                translated = translate_text_batch([t for t, _ in batch], target_language)
+                if translated:
+                    for (_, obj), trans in zip(batch, translated):
+                        replace_text_in_ref(obj, trans)
+                else:
+                    skipped_slides.append(slide_index + 1)
+
+                batch = []
+                current_tokens = 0
+
+            batch.append((text, ref))
+            current_tokens += tokens
+
+        if batch:
+            translated = translate_text_batch([t for t, _ in batch], target_language)
+            if translated:
+                for (_, obj), trans in zip(batch, translated):
+                    replace_text_in_ref(obj, trans)
+            else:
+                skipped_slides.append(slide_index + 1)
+
+    prs.save(output_pptx)
+    return skipped_slides
+
+@bp.route("/translate", methods=["POST"])
+async def translate():
+    """Handle translation of uploaded PPTX files."""
+    try:
+        print("Request received for translation...")
+        form = await request.form
+        file = (await request.files).get("file")
+        target_language = form.get("language")
+
+        if not file or not target_language:
+            print("❌ Missing file or language.")
+            return jsonify({"error": "Missing file or language"}), 400
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pptx") as temp_input:
+            await file.save(temp_input.name)
+            input_path = temp_input.name
+
+        output_path = input_path.replace(".pptx", f"_{target_language}.pptx")
+
+        loop = asyncio.get_event_loop()
+
+        # Translate PPTX (split into batches to avoid exceeding token limits)
+        skipped_slides = await loop.run_in_executor(
+            None, translate_pptx, input_path, output_path, target_language
+        )
+        if skipped_slides:
+            print(f"⚠️ Skipped slides due to issues: {skipped_slides}")
+    
+        return await send_file(output_path, as_attachment=True)
+
+    except Exception as e:
+        print(f"❌ Translation Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'input_path' in locals() and os.path.exists(input_path):
+            os.remove(input_path)
 
 
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Max input file limit is 50 MB
     
     @app.before_serving
     async def init():
