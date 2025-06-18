@@ -231,6 +231,21 @@ def replace_text_in_ref(obj, new_text):
         if hasattr(para, "bullet"):
             para.bullet = bullet_level is not None
 
+def collect_text_items_from_shape(shape, text_items):
+    if hasattr(shape, "shapes"):
+        for subshape in shape.shapes:
+            collect_text_items_from_shape(subshape, text_items)
+    elif hasattr(shape, "text_frame") and shape.text_frame is not None:
+        for paragraph in shape.text_frame.paragraphs:
+            text = " ".join(run.text for run in paragraph.runs).strip()
+            if text:
+                text_items.append((text, paragraph))
+    elif hasattr(shape, "has_table") and shape.has_table:
+        for row in shape.table.rows:
+            for cell in row.cells:
+                cell_text = cell.text.strip()
+                if cell_text:
+                    text_items.append((cell_text, cell))
 def translate_pptx(input_pptx, output_pptx, target_language):
     # print(f"Translating PPTX to {target_language}...")	
     prs = Presentation(input_pptx)
@@ -242,17 +257,7 @@ def translate_pptx(input_pptx, output_pptx, target_language):
 
         # Collect all translatable text chunks from slide
         for shape in slide.shapes:
-            if shape.has_text_frame:
-                for paragraph in shape.text_frame.paragraphs:
-                    text = " ".join(run.text for run in paragraph.runs).strip()
-                    if text:
-                        text_items.append((text, paragraph))
-            elif shape.has_table:
-                for row in shape.table.rows:
-                    for cell in row.cells:
-                        cell_text = cell.text.strip()
-                        if cell_text:
-                            text_items.append((cell_text, cell))
+            collect_text_items_from_shape(shape, text_items)
 
         # Translate in small batches and replace immediately
         batch = []
