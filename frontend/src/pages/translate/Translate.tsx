@@ -155,7 +155,9 @@ const Translate = () => {
               <img src={logo} className={styles.chatIcon} aria-hidden="true" />
               <h1 className={styles.chatEmptyStateTitle}>Translate it the Kline way</h1>
               <h2 className={styles.chatEmptyStateSubtitle}>
-                Effortlessly translate the reports in any language with the power of AI
+                Easily translate the reports in any language with the power of AI
+                <p></p>
+                After translation, please check the downloaded file for font, layout and translation errors
               </h2>
             </Stack>
           </div>
