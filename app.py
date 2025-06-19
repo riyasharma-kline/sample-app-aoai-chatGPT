@@ -70,7 +70,7 @@ def estimate_token_count(text):
     """Estimate the token count of a given text."""
     encoding = tiktoken.get_encoding("cl100k_base") 
     token_count = len(encoding.encode(text))
-    print(f"Estimated token count for text: {token_count}")
+    # print(f"Estimated token count for text: {token_count}")
     return token_count
 
 def apply_glossary(text):
