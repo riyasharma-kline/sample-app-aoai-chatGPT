@@ -111,11 +111,14 @@ const Layout = () => {
           </Stack>
         </Stack>
       </header>
-        {activeTab === 'chat' ? (
-          <Chat /> 
-        ) : (
-          <Translate /> 
-        )}
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <div style={{ display: activeTab === 'chat' ? 'block' : 'none', width: '100%', height: '100%' }}>
+          <Chat />
+        </div>
+        <div style={{ display: activeTab === 'translate' ? 'block' : 'none', width: '100%' }}>
+          <Translate />
+        </div>
+      </div>
       <Dialog
         onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}
