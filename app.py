@@ -52,7 +52,6 @@ from pptx.util import Pt
 
 load_dotenv()
 
-# Constants
 TOKEN_LIMIT = 3500 
 MAX_RETRIES = 3
 AZURE_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -70,7 +69,6 @@ def estimate_token_count(text):
     """Estimate the token count of a given text."""
     encoding = tiktoken.get_encoding("cl100k_base") 
     token_count = len(encoding.encode(text))
-    # print(f"Estimated token count for text: {token_count}")
     return token_count
 
 def apply_glossary(text):
@@ -88,7 +86,6 @@ def split_into_batches(texts, token_limit):
     for text in texts:
         tokens = estimate_token_count(text)
         if tokens > token_limit:
-            print(f"⚠️ Skipping text - Token count {tokens} exceeds limit {token_limit}")
             continue
         if current_tokens + tokens > token_limit and current_batch:
             batches.append(current_batch)
@@ -100,7 +97,6 @@ def split_into_batches(texts, token_limit):
     if current_batch:
         batches.append(current_batch)
 
-    print(f"Total batches formed: {len(batches)}")
     return batches
 
 def translate_text_batch(texts, target_language):
@@ -113,7 +109,6 @@ def translate_text_batch(texts, target_language):
 
     token_count = estimate_token_count(combined_text)
     if token_count > TOKEN_LIMIT:
-        print(f"⚠️ Skipping batch due to token limit: {token_count}")
         return None
 
     combined_text = apply_glossary(combined_text)
@@ -139,11 +134,11 @@ def translate_text_batch(texts, target_language):
             if response.status_code == 200 and "choices" in data:
                 return data["choices"][0]["message"]["content"].split("\n\n")
             else:
-                print(f"⚠️ API Error: {data}")
+                print(f"API Error: {data}")
         except requests.exceptions.RequestException as e:
-            print(f"❌ Request Error (Attempt {attempt + 1}): {e}")
+            print(f"Request Error (Attempt {attempt + 1}): {e}")
 
-    print("❌ Translation failed after retries.")
+    print("Translation failed after retries.")
     return None
 
 def replace_text_in_ref(obj, new_text):
@@ -247,12 +242,11 @@ def collect_text_items_from_shape(shape, text_items):
                 if cell_text:
                     text_items.append((cell_text, cell))
 def translate_pptx(input_pptx, output_pptx, target_language):
-    # print(f"Translating PPTX to {target_language}...")	
     prs = Presentation(input_pptx)
     skipped_slides = []
 
     for slide_index, slide in enumerate(prs.slides):
-        # print(f"\n📄 Processing Slide {slide_index + 1}")
+        # print(f"\nProcessing Slide {slide_index + 1}")
         text_items = [] 
 
         # Collect all translatable text chunks from slide
@@ -266,7 +260,6 @@ def translate_pptx(input_pptx, output_pptx, target_language):
         for text, ref in text_items:
             tokens = estimate_token_count(text)
             if tokens > TOKEN_LIMIT:
-                print(f"⚠️ Skipping item with too many tokens: {tokens}")
                 continue
             if current_tokens + tokens > TOKEN_LIMIT:
                 translated = translate_text_batch([t for t, _ in batch], target_language)
@@ -297,13 +290,11 @@ def translate_pptx(input_pptx, output_pptx, target_language):
 async def translate():
     """Handle translation of uploaded PPTX files."""
     try:
-        print("Request received for translation...")
         form = await request.form
         file = (await request.files).get("file")
         target_language = form.get("language")
 
         if not file or not target_language:
-            print("❌ Missing file or language.")
             return jsonify({"error": "Missing file or language"}), 400
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pptx") as temp_input:
@@ -315,11 +306,9 @@ async def translate():
         loop = asyncio.get_event_loop()
 
         # Translate PPTX (split into batches to avoid exceeding token limits)
-        skipped_slides = await loop.run_in_executor(
+        await loop.run_in_executor(
             None, translate_pptx, input_path, output_path, target_language
         )
-        if skipped_slides:
-            print(f"⚠️ Skipped slides due to issues: {skipped_slides}")
     
         return await send_file(output_path, as_attachment=True)
 
@@ -336,7 +325,7 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Max input file limit is 50 MB
+    app.config['MAX_CONTENT_LENGTH'] = 80* 1024 * 1024  # Max input file limit is 80 MB
     
     @app.before_serving
     async def init():

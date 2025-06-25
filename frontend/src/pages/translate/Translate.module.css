@@ -198,6 +198,11 @@
   position: relative;
   top: 1px;
 }
+.translateButton:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
 
 .cancelButton:hover {
   background-color: #e0e0e0;

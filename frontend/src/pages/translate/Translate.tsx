@@ -17,6 +17,7 @@ const Translate = () => {
   const [language, setLanguage] = useState<string>('')
   const [isTranslating, setIsTranslating] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const appStateContext = useContext(AppStateContext)
   const [logo, setLogo] = useState('')
   const ui = appStateContext?.state.frontendSettings?.ui
@@ -75,9 +76,10 @@ const Translate = () => {
 
   const handleTranslate = async () => {
     if (!file || !language) {
-      alert('Please upload a PPT file and select a language.')
+      setErrorMessage('Please upload a PPT file and select a language.')
       return
     }
+    setErrorMessage(null)
 
     const formData = new FormData()
     formData.append('file', file)
@@ -94,8 +96,13 @@ const Translate = () => {
     } catch (error: any) {
       if (error.name === 'AbortError') {
         // Cancelled, do nothing or show a message
+      } else if (
+        (error.message && error.message.includes('413')) ||
+        (error.response && error.response.status === 413)
+      ) {
+        setErrorMessage('Maximum file size exceeded. Please insert a shorter file.')
       } else {
-        alert(`Error during translation`)
+        setErrorMessage('Error during translation. Please try again later.')
       }
     } finally {
       setIsTranslating(false)
@@ -188,11 +195,13 @@ const Translate = () => {
                     <>
                       <select value={language} onChange={handleLanguageChange} className={styles.languageDropdown}>
                         <option value="">Select Language</option>
-                        <option value="French">French</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="German">German</option>
                         <option value="Chinese">Chinese</option>
+                        <option value="English">English</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
                         <option value="Japanese">Japanese</option>
+                        <option value="Portuguese">Portuguese</option>
+                        <option value="Spanish">Spanish</option>
                       </select>
 
                       <div className={styles.buttonGroup}>
@@ -233,6 +242,9 @@ const Translate = () => {
                           </style>
                         </button>
                       </div>
+                      {errorMessage && (
+                        <div style={{ color: '#c72c2c', marginTop: '0.5rem', fontSize: '1rem' }}>{errorMessage}</div>
+                      )}
                     </>
                   )}
                 </div>
