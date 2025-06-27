@@ -10,6 +10,7 @@ import UploadIcon from '../../assets/upload-icon.png'
 import PPTIcon from '../../assets/ppt-icon.png'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import JSZip from 'jszip'
 
 const Translate = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -25,6 +26,7 @@ const Translate = () => {
 
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
   const [showAuthMessage, setShowAuthMessage] = useState<boolean | undefined>()
+  const [slideCount, setSlideCount] = useState<number | null>(null)
 
   const getUserInfoList = async () => {
     if (!AUTH_ENABLED) {
@@ -52,10 +54,43 @@ const Translate = () => {
     fileInputRef.current?.click()
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const countSlidesInPptx = async (file: File): Promise<number> => {
+    const arrayBuffer = await file.arrayBuffer()
+    const zip = await JSZip.loadAsync(arrayBuffer)
+    const slideFiles = Object.keys(zip.files).filter((name) =>
+      /^ppt\/slides\/slide\d+\.xml$/.test(name)
+    )
+    return slideFiles.length
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
-      setFile(e.target.files[0])
+      const selectedFile = e.target.files[0]
       setDownloadUrl(null) // reset previous translation
+      let count: number | null = null
+      if (!selectedFile.name.endsWith('.pptx')) {
+        setErrorMessage('Only .pptx files are supported. Please upload a .pptx file.')
+        setFile(null)
+        setSlideCount(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        return
+      }
+      try {
+        count = await countSlidesInPptx(selectedFile)
+        setSlideCount(count)
+        if (count > 50) {
+          setErrorMessage('Please upload a PowerPoint file with a maximum of 50 slides.')
+        } else {
+          setErrorMessage(null)
+        }
+      } catch (err) {
+        setErrorMessage('Could not read PPTX file. Please try another file.')
+        setFile(null)
+        setSlideCount(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        return
+      }
+      setFile(selectedFile)
     }
   }
 
@@ -65,6 +100,7 @@ const Translate = () => {
     setDownloadUrl(null) // reset previous translation
     setLanguage('')
     setIsTranslating(false)
+    setErrorMessage(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = '' // Clear the file input
     }
@@ -174,7 +210,7 @@ const Translate = () => {
                 <div className={styles.uploadBox} onClick={handleUploadClick}>
                   <input
                     type="file"
-                    accept=".ppt,.pptx"
+                    accept=".pptx"
                     ref={fileInputRef}
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
@@ -211,7 +247,7 @@ const Translate = () => {
                         <button
                           onClick={handleTranslate}
                           className={styles.translateButton}
-                          disabled={!language || isTranslating}>
+                          disabled={!language || isTranslating || (slideCount !== null && slideCount > 50)}>
                           {isTranslating ? (
                             <>
                               <span>Translating...</span>
