@@ -82,24 +82,26 @@ const Layout = () => {
           <Stack horizontal verticalAlign="center">
             <img src={logo} className={styles.headerIcon} aria-hidden="true" alt="" />
             <Link to="/" className={styles.headerTitleContainer}>
-            <h1 className={styles.headerTitle}>{ui?.title}</h1>
+              <h1 className={styles.headerTitle}>{ui?.title}</h1>
             </Link>
           </Stack>
-          <div className={styles.tabContainer}>
-            <button
-              className={`${styles.tabButton} ${activeTab === 'chat' ? styles.activeTab : ''}`}
-              onClick={() => setActiveTab('chat')}
-            >
-              Chat
-            </button>
-            
-            <button
-              className={`${styles.tabButton} ${activeTab === 'translate' ? styles.activeTab : ''}`}
-              onClick={() => setActiveTab('translate')}
-            >
-              Translate
-            </button>
-          </div>
+          {/* Only show tab buttons if translate_tab_enable is true */}
+          {ui?.translate_tab_enable && (
+            <div className={styles.tabContainer}>
+              <button
+                className={`${styles.tabButton} ${activeTab === 'chat' ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >
+                Chat
+              </button>
+              <button
+                className={`${styles.tabButton} ${activeTab === 'translate' ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab('translate')}
+              >
+                Translate
+              </button>
+            </div>
+          )}
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
@@ -111,14 +113,21 @@ const Layout = () => {
           </Stack>
         </Stack>
       </header>
-      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        <div style={{ display: activeTab === 'chat' ? 'block' : 'none', width: '100%', height: '100%' }}>
+      {/* Only show both tabs and their contents if translate_tab_enable is true */}
+      {ui?.translate_tab_enable ? (
+        <div style={{ position: 'relative', width: '100%', height: '100%' }} >
+          <div style={{ display: activeTab === 'chat' ? 'block' : 'none', width: '100%', height: '100%' }}>
+            <Chat />
+          </div>
+          <div style={{ display: activeTab === 'translate' ? 'block' : 'none', width: '100%' }} >
+            <Translate />
+          </div>
+        </div>
+      ) : (
+        <div style={{ width: '100%', height: '100%' }}>
           <Chat />
         </div>
-        <div style={{ display: activeTab === 'translate' ? 'block' : 'none', width: '100%' }}>
-          <Translate />
-        </div>
-      </div>
+      )}
       <Dialog
         onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}

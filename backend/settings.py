@@ -49,6 +49,21 @@ class _UiSettings(BaseSettings):
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
     show_chat_history_button: bool = True
+    translate_tab_enable: bool = False
+    translate_tab_title: str = "Translate it the Kline way"
+    translate_tab_description_line1: str = "Easily translate the reports in any language with the power of AI."
+    translate_tab_description_line2: str = "After translation, please check the downloaded file for font, layout and translation errors."
+    translate_tab_slide_limit_enable: bool = False
+    translate_tab_slide_limit: int = 50
+    translate_tab_languages: List[str] =  [
+            "Chinese",
+            "English",
+            "French",
+            "Japanese",
+            "German",
+            "Portuguese",
+            "Spanish"
+        ]
 
 
 class _ChatHistorySettings(BaseSettings):

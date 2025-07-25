@@ -131,6 +131,13 @@ export type UI = {
   chat_logo?: string
   show_share_button?: boolean
   show_chat_history_button?: boolean
+  translate_tab_enable?: boolean
+  translate_tab_title?: string
+  translate_tab_description_line1?: string
+  translate_tab_description_line2?: string
+  translate_tab_slide_limit_enable?: boolean
+  translate_tab_slide_limit?: number
+  translate_tab_languages?: string[]
 }
 
 export type FrontendSettings = {

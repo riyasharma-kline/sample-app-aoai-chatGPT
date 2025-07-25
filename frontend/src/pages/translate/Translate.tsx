@@ -20,6 +20,12 @@ const Translate = () => {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const appStateContext = useContext(AppStateContext)
+  const [translate_tab_description_line1, setTranslateTabDescriptionLine1] = useState<string | undefined>(undefined)
+  const [translate_tab_description_line2, setTranslateTabDescriptionLine2] = useState<string | undefined>(undefined)
+  const [translate_tab_title, setTranslateTabTitle] = useState<string | undefined>(undefined)
+  const [translate_tab_slide_limit_enable, setTranslateTabSlideLimitEnable] = useState<boolean | undefined>(undefined)
+  const [translate_tab_slide_limit, setTranslateTabSlideLimit] = useState<number | undefined>(undefined)
+  const [translate_tab_languages, setTranslateTabLanguages] = useState<string[] | undefined>(undefined)
   const [logo, setLogo] = useState('')
   const ui = appStateContext?.state.frontendSettings?.ui
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -43,6 +49,12 @@ const Translate = () => {
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
       setLogo(ui?.chat_logo || ui?.logo || Contoso)
+      setTranslateTabDescriptionLine1(ui?.translate_tab_description_line1 || 'Easily translate the reports in any language with the power of AI.')
+      setTranslateTabDescriptionLine2(ui?.translate_tab_description_line2 || 'After translation, please check the downloaded file for font, layout and translation errors')
+      setTranslateTabTitle(ui?.translate_tab_title || 'Translate it the Kline way') 
+      setTranslateTabSlideLimitEnable(ui?.translate_tab_slide_limit_enable)
+      setTranslateTabSlideLimit(ui?.translate_tab_slide_limit || 50)
+      setTranslateTabLanguages(ui?.translate_tab_languages || ['Chinese','English','French', 'German', 'Japanese', 'Portuguese', 'Spanish'])
     }
   }, [appStateContext?.state.isLoading])
 
@@ -78,8 +90,12 @@ const Translate = () => {
       try {
         count = await countSlidesInPptx(selectedFile)
         setSlideCount(count)
-        if (count > 50) {
-          setErrorMessage('Please upload a PowerPoint file with a maximum of 50 slides.')
+        if (translate_tab_slide_limit_enable && translate_tab_slide_limit !== undefined) {
+          if (count > translate_tab_slide_limit) {
+            setErrorMessage(`Please upload a PowerPoint file with a maximum of ${translate_tab_slide_limit} slides.`)
+          } else {
+            setErrorMessage(null)
+          }
         } else {
           setErrorMessage(null)
         }
@@ -196,11 +212,12 @@ const Translate = () => {
           <div className={styles.chatLeft}>
             <Stack className={styles.chatEmptyState}>
               <img src={logo} className={styles.chatIcon} aria-hidden="true" />
-              <h1 className={styles.chatEmptyStateTitle}>Translate it the Kline way</h1>
+              <h1 className={styles.chatEmptyStateTitle}>{translate_tab_title}</h1>
               <h2 className={styles.chatEmptyStateSubtitle}>
-                Easily translate the reports in any language with the power of AI
-                <p></p>
-                After translation, please check the downloaded file for font, layout and translation errors
+                {translate_tab_description_line1}
+              </h2>
+              <h2 className={styles.chatEmptyStateSubtitle} style={{ marginTop: '0px' }}>
+                {translate_tab_description_line2}
               </h2>
             </Stack>
           </div>
@@ -229,15 +246,13 @@ const Translate = () => {
                   </div>
                   {!downloadUrl && (
                     <>
-                      <select value={language} onChange={handleLanguageChange} className={styles.languageDropdown}>
+                      <select value={language} onChange={handleLanguageChange} className={styles.languageDropdown} >
                         <option value="">Select Language</option>
-                        <option value="Chinese">Chinese</option>
-                        <option value="English">English</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Portuguese">Portuguese</option>
-                        <option value="Spanish">Spanish</option>
+                        {translate_tab_languages?.map((lang, index) => (
+                          <option key={index} value={lang}>
+                            {lang}
+                          </option>
+                        ))}
                       </select>
 
                       <div className={styles.buttonGroup}>
@@ -247,7 +262,7 @@ const Translate = () => {
                         <button
                           onClick={handleTranslate}
                           className={styles.translateButton}
-                          disabled={!language || isTranslating || (slideCount !== null && slideCount > 50)}>
+                          disabled={!language || isTranslating || (translate_tab_slide_limit_enable && translate_tab_slide_limit !== undefined && slideCount !== null && slideCount > translate_tab_slide_limit)}>
                           {isTranslating ? (
                             <>
                               <span>Translating...</span>
