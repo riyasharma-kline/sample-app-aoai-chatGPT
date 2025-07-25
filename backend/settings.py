@@ -59,8 +59,8 @@ class _UiSettings(BaseSettings):
             "Chinese",
             "English",
             "French",
-            "Japanese",
             "German",
+            "Japanese",
             "Portuguese",
             "Spanish"
         ]
