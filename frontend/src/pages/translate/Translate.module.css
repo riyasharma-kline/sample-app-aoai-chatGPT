@@ -4,6 +4,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  left: 0px;
 }
 
 .chatEmptyStateTitle {
@@ -34,9 +35,6 @@
   height: 62px;
   width: auto;
 }
-.chatEmptyState {
-  left: 0px;
-}
 
 .chatEmptyStateTitle {
   line-height: 36px;
@@ -48,222 +46,31 @@
   gap: 20px;
 }
 
-.chatRoot {
-  flex: 1;
-  display: flex;
-  margin-top: 0px;
-  margin-bottom: 20px;
-  margin-left: 20px;
-  margin-right: 20px;
-  gap: 5px;
-}
-
-.chatContainer {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
-  box-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
-  overflow-y: auto;
-  max-height: calc(100vh - 100px);
-}
-.translateCard {
-  max-width: 500px;
-  margin: 4rem auto;
-  padding: 2rem;
-  background: #f9f9f9;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', sans-serif;
-}
-.uploadIconImage {
-  width: 106px;
-  height: auto;
-}
-.uploadBox {
-  border: 2px dashed #d0d0d0;
-  border-radius: 12px;
-  padding: 40px 20px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.uploadBox:hover {
-  background-color: #f0f8ff;
-}
-
-.uploadIcon {
-  font-size: 36px;
-  margin-bottom: 12px;
-}
-
-.chooseButton {
-  margin-top: 16px;
-  padding: 10px 20px;
-  font-size: 16px;
-  background: #e6ebf0;
-  color: #0f6cbd;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.translationBox {
-  text-align: center;
-}
-
-.pptPreview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  justify-content: center;
-}
-
-.pptIcon {
-  width: 106px;
-  height: auto;
-}
-
-.languageDropdown {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-.buttonGroup {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 500px;
-}
-.startOverButton {
-  flex: 1;
-  padding: 12px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid #a9a7a7;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  width: 60px;
-  height: 45px;
-  background-color: #f0f0f0;
-  color: #444;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-top: -28px;
-}
-.cancelButton {
-  flex: 1;
-  padding: 12px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid #a9a7a7;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  width: 60px;
-  height: 45px;
-  background-color: #f0f0f0;
-  color: #444;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-top: 2px;
-}
-.translateButton {
-  flex: 1;
-  padding: 12px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  width: 60px;
-  height: 45px;
-  background-color: #00aaff;
-  color: white;
-  box-shadow: 0 4px 8px rgba(0, 170, 255, 0.3);
-  position: relative;
-  top: 1px;
-}
-.translateButton:disabled {
-  opacity: 0.5;
-  pointer-events: none;
-  cursor: not-allowed;
-}
-
-.cancelButton:hover {
-  background-color: #e0e0e0;
-}
-.startOverButton:hover {
-  background-color: #e0e0e0;
-}
-
-.translateButton:hover {
-  background-color: #008fcc;
-}
-
-.downloadLink {
-  display: contents;
-  justify-content: center;
-  text-decoration: none;
-  margin: 30px auto;
-  width: 100%;
-  max-width: 500px;
-}
-
-.downloadButton {
-  width: 100%;
-  height: 70px;
-  padding: 16px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  background-color: #eaeaea;
-  color: #3f4144;
-  border: 1px solid #3f4144;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.downloadButton:hover {
-  background-color: #e0f0ff;
-  color: #003366;
-  transform: translateY(-2px);
-}
 
 .chatLayout {
+  width: calc(100% - 40px);
+  height: calc(100vh - 60px - 20px);
   display: flex;
-  flex-direction: row;
-  gap: 200px;
-  justify-content: center;
   align-items: center;
-  padding: 4rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  padding: clamp(1rem, 2vw, 2.5rem);
+  margin: 0 20px 20px 20px;
+  gap: clamp(8rem, 20vw, 16rem);
   background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
   border-radius: 8px;
-  overflow-y: auto;
-  max-height: calc(100vh - 100px);
-  margin-top: 0px;
-  margin-bottom: 20px;
-  margin-left: 20px;
-  margin-right: 20px;
+  box-sizing: border-box;
+}
+
+.chatLayout .content {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
 .chatLeft {
@@ -282,20 +89,81 @@
   max-width: 540px;
 }
 
-.spinnerWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 1rem;
+.dropdownContainer {
+  position: absolute;
+  top: 0.5rem;
+  right: 2rem;
+  z-index: 10;
 }
-
-.spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border-left-color: #09f;
-  animation: spin 1s linear infinite;
+.dropdownWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem;
+}
+.dropdownRelative {
+  position: relative;
+}
+.dropdownButton {
+  position: relative;
+  cursor: pointer;
+  min-width: 180px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 8px #0000003b;
+  transition: box-shadow 0.2s;
+}
+.dropdownIcon {
+  width: 32px;
+  margin-right: 0.5rem;
+}
+.dropdownLabel {
+  color: #222;
+  font-size: 1rem;
+}
+.dropdownArrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: #222;
+  line-height: 1;
+}
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+.dropdownMenuItem {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+  background: #fff;
+}
+.dropdownMenuItem:last-child {
+  border-bottom: none;
+}
+.dropdownMenuItemHover {
+  background: #f5f5f5 !important;
 }
 
 @keyframes spin {

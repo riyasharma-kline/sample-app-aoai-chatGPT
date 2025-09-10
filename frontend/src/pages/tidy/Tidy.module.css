@@ -1,0 +1,287 @@
+.chatEmptyState {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  left: 0px;
+}
+
+.chatEmptyStateTitle {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 36px;
+  display: flex;
+  align-items: flex-end;
+  text-align: center;
+  line-height: 24px;
+  margin-top: 36px;
+  margin-bottom: 0px;
+}
+
+.chatEmptyStateSubtitle {
+  margin-top: 20px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  align-items: flex-end;
+  text-align: center;
+  letter-spacing: -0.01em;
+  color: #616161;
+}
+
+.chatIcon {
+  height: 62px;
+  width: auto;
+}
+
+.chatEmptyStateTitle {
+  line-height: 36px;
+}
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pptIcon {
+  width: 106px;
+  height: auto;
+}
+
+.tidyButton {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  width: 60px;
+  height: 45px;
+  background-color: #00aaff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 170, 255, 0.3);
+  position: relative;
+  top: 1px;
+}
+.tidyButton:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.tidyButton:hover {
+  background-color: #008fcc;
+}
+
+.chatLayout {
+  width: calc(100% - 40px);
+  height: calc(100vh - 60px - 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 2vw, 2.5rem);
+  margin: 0 20px 20px 20px;
+  gap: clamp(8rem, 20vw, 16rem);
+  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
+  box-shadow:
+    0px 2px 4px rgba(0, 0, 0, 0.14),
+    0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.chatLayout .content {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.chatLeft {
+  flex: 1;
+  min-width: 300px;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.chatRight {
+  flex: 1;
+  min-width: 320px;
+  max-width: 540px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.chatEmptyState {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.chatIcon {
+  height: 62px;
+  width: auto;
+}
+.chatEmptyState {
+  left: 0px;
+}
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tidyCard {
+  max-width: 500px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: #f9f9f9;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+.uploadIconImage {
+  width: 106px;
+  height: auto;
+}
+.uploadBox {
+  border: 2px dashed #d0d0d0;
+  border-radius: 12px;
+  padding: 40px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.uploadBox:hover {
+  background-color: #f0f8ff;
+}
+
+.uploadIcon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.chooseButton {
+  margin-top: 16px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #e6ebf0;
+  color: #0f6cbd;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.translationBox {
+  text-align: center;
+}
+
+.pptPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pptIcon {
+  width: 106px;
+  height: auto;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #a9a7a7;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  width: 60px;
+  height: 45px;
+  background-color: #f0f0f0;
+  color: #444;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 2px;
+}
+.tidyButton {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  width: 60px;
+  height: 45px;
+  background-color: #00aaff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 170, 255, 0.3);
+  position: relative;
+  top: 1px;
+}
+.tidyButton:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.cancelButton:hover {
+  background-color: #e0e0e0;
+}
+
+.tidyButton:hover {
+  background-color: #008fcc;
+}
+
+.downloadLink {
+  display: contents;
+  justify-content: center;
+  text-decoration: none;
+  margin: 30px auto;
+  width: 100%;
+  max-width: 500px;
+}
+
+.chatRight {
+  flex: 1;
+  min-width: 320px;
+  max-width: 540px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

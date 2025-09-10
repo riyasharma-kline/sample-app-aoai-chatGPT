@@ -10,6 +10,9 @@ import { AppStateContext } from '../../state/AppProvider'
 import Translate from '../../pages/translate/Translate'
 import Chat from '../chat/Chat'
 import styles from './Layout.module.css'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import Tidy from '../../pages/tidy/Tidy'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
@@ -19,10 +22,21 @@ const Layout = () => {
   const [hideHistoryLabel, setHideHistoryLabel] = useState<string>('Hide chat history')
   const [showHistoryLabel, setShowHistoryLabel] = useState<string>('Show chat history')
   const [logo, setLogo] = useState('')
-  const [activeTab, setActiveTab] = useState<'chat' | 'translate'>('chat') // <-- NEW STATE
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
-
+  // Determine which tabs are enabled based on env settings
+  const enabledTabs = [
+    { key: 'chat', label: 'Chat', component: <Chat /> },
+    ...(ui?.translate_tab_enable ? [{ key: 'translate', label: 'Translate', component: <Translate /> }] : []),
+    ...(ui?.tidy_tab_enable ? [{ key: 'tidy', label: 'Tidy', component: <Tidy /> }] : []),
+  ]
+  const [activeTab, setActiveTab] = useState<string>(enabledTabs[0].key)
+  
+  useEffect(() => {
+    if (!enabledTabs.find(tab => tab.key === activeTab)) {
+      setActiveTab(enabledTabs[0].key)
+    }
+  }, [ui?.translate_tab_enable, ui?.tidy_tab_enable])
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
   }
@@ -85,23 +99,18 @@ const Layout = () => {
               <h1 className={styles.headerTitle}>{ui?.title}</h1>
             </Link>
           </Stack>
-          {/* Only show tab buttons if translate_tab_enable is true */}
-          {ui?.translate_tab_enable && (
-            <div className={styles.tabContainer}>
+{/* Always show Chat, others if enabled */}
+          <div className={styles.tabContainer}>
+            {enabledTabs.map(tab => (
               <button
-                className={`${styles.tabButton} ${activeTab === 'chat' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('chat')}
+                key={tab.key}
+                className={`${styles.tabButton} ${activeTab === tab.key ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab(tab.key)}
               >
-                Chat
+                {tab.label}
               </button>
-              <button
-                className={`${styles.tabButton} ${activeTab === 'translate' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('translate')}
-              >
-                Translate
-              </button>
-            </div>
-          )}
+            ))}
+          </div>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
@@ -113,21 +122,18 @@ const Layout = () => {
           </Stack>
         </Stack>
       </header>
-      {/* Only show both tabs and their contents if translate_tab_enable is true */}
-      {ui?.translate_tab_enable ? (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }} >
-          <div style={{ display: activeTab === 'chat' ? 'block' : 'none', width: '100%', height: '100%' }}>
-            <Chat />
+     {/* Show only the active tab's component */}
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        {enabledTabs.map(tab =>
+          <div
+            key={tab.key}
+            style={{ display: activeTab === tab.key ? 'block' : 'none', width: '100%', height: '100%' }}
+          >
+            {tab.component}
           </div>
-          <div style={{ display: activeTab === 'translate' ? 'block' : 'none', width: '100%' }} >
-            <Translate />
-          </div>
-        </div>
-      ) : (
-        <div style={{ width: '100%', height: '100%' }}>
-          <Chat />
-        </div>
-      )}
+        )}
+      </div>
+      
       <Dialog
         onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}
@@ -165,6 +171,8 @@ const Layout = () => {
           </div>
         </Stack>
       </Dialog>
+    {/* Show toast notifications one at a time in case of multiple tabs in use */}
+    <ToastContainer />
     </div>
   )
 }

@@ -49,12 +49,11 @@ class _UiSettings(BaseSettings):
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
     show_chat_history_button: bool = True
+
     translate_tab_enable: bool = False
     translate_tab_title: str = "Translate it the Kline way"
-    translate_tab_description_line1: str = "Easily translate the reports in any language with the power of AI."
-    translate_tab_description_line2: str = "After translation, please check the downloaded file for font, layout and translation errors."
-    translate_tab_slide_limit_enable: bool = False
-    translate_tab_slide_limit: int = 50
+    translate_tab_description_line1: str = "Easily translate the reports in any language with the power of AI"
+    translate_tab_description_line2: str = "After translation, please check the downloaded file for font, layout and translation errors"
     translate_tab_languages: List[str] =  [
             "Chinese",
             "English",
@@ -64,6 +63,23 @@ class _UiSettings(BaseSettings):
             "Portuguese",
             "Spanish"
         ]
+    
+    # Slide Translation Tab
+    translate_tab_slide_upload_container_text: str = "Upload a PowerPoint to Translate it"
+    translate_tab_slide_limit: int = 50
+    
+    # Image Translation Tab
+    translate_tab_image_upload_limit: int = 50
+    translate_tab_image_upload_container_text: str = "Upload a folder of images for text translation. Only PNG, JPG, and JPEG files will be selected. Maximum of 50 images per folder allowed."
+    
+    # Tidy Tab
+    tidy_tab_enable: bool = False
+    tidy_tab_title: str = "Tidy it the Kline way"
+    tidy_tab_description_line1: str = "Easily tidy up your presentation with the power of AI"
+    tidy_tab_description_line2: str = "After tidying, please check the downloaded file for font and layout issues"
+    tidy_tab_slide_limit: int = 50
+    tidy_tab_slide_upload_container_text: str = "Upload a PowerPoint to Tidy it"
+    
 
 
 class _ChatHistorySettings(BaseSettings):

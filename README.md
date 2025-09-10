@@ -496,12 +496,20 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 |UI_SHOW_CHAT_HISTORY_BUTTON|No|True|Show chat history button (right-top)
 |SANITIZE_ANSWER|No|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
 |UI_TRANSLATE_TAB_ENABLE|No|False|To enable the Translate tab set to True.|
-|UI_TRANSLATE_TAB_TITLE|No|Translate it the Kline way||
-|UI_TRANSLATE_TAB_DESCRIPTION_LINE1|No|Easily translate the reports in any language with the power of AI.||
-|UI_TRANSLATE_TAB_DESCRIPTION_LINE2|No|After translation, please check the downloaded file for font, layout and translation errors.||
-|UI_TRANSLATE_TAB_SLIDE_LIMIT_ENABLE|No|False|Set it True to enable slide limits.|
-|UI_TRANSLATE_TAB_SLIDE_LIMIT|No|50||
-|UI_TRANSLATE_TAB_LANGUAGES|No|["Chinese","English","French", "German", "Japanese", "Portuguese", "Spanish"]|Add any language in the array.|
+|UI_TRANSLATE_TAB_TITLE|No|Translate it the Kline way|Title displayed on the Translate tab.|
+|UI_TRANSLATE_TAB_DESCRIPTION_LINE1|No|Easily translate the reports in any language with the power of AI|First line of description shown on the Translate tab.|
+|UI_TRANSLATE_TAB_DESCRIPTION_LINE2|No|After translation, please check the downloaded file for font, layout and translation errors|Second line of description shown on the Translate tab.|
+|UI_TRANSLATE_TAB_LANGUAGES|No|["Chinese","English","French", "German", "Japanese", "Portuguese", "Spanish"]|Add/remove any valid language in the array.|
+|UI_TRANSLATE_TAB_SLIDE_LIMIT|No|50|Sets the maximum number of slides allowed per PowerPoint file for translation in the Translate tab. If a user uploads a file with more slides than this limit, the upload will be rejected and an error message will be shown.|
+|UI_TRANSLATE_TAB_SLIDE_UPLOAD_CONTAINER_TEXT|No|Upload a PowerPoint to Translate it|This is the text shown on the right side upload container in the Translate tab.|
+|UI_TRANSLATE_TAB_IMAGE_UPLOAD_LIMIT|No|50|Sets the maximum number of images allowed per folder upload for translation in the Translate tab.|
+|UI_TRANSLATE_TAB_IMAGE_UPLOAD_CONTAINER_TEXT|No|Upload a folder of images for text translation. Only PNG, JPG, and JPEG files will be selected. Maximum of 50 images per folder allowed.|Upload a PowerPoint to Translate it|This is the text shown on the right side upload container in the Translate tab.|
+|UI_TIDY_TAB_ENABLE|No|False|To enable the Tidy tab set to True.|
+|UI_TIDY_TAB_TITLE|No|Tidy it the Kline way|Title displayed on the Tidy tab.|
+|UI_TIDY_TAB_DESCRIPTION_LINE1|No|Easily tidy up your presentation with the power of AI|First line of description shown on the Tidy tab.|
+|UI_TIDY_TAB_DESCRIPTION_LINE2|No|After tidying, please check the downloaded file for font and layout issues|Second line of description shown on the Tidy tab.|
+|UI_TIDY_TAB_SLIDE_LIMIT|No|50|Sets the maximum number of slides allowed per PowerPoint file for tidying in the Tidy tab. If a user uploads a file with more slides than this limit, an error message will be shown.|
+|UI_TIDY_TAB_SLIDE_UPLOAD_CONTAINER_TEXT|No|Upload a PowerPoint to tidy it|This is the text shown on the right side upload container in the Tidy tab.|
 
 Any custom images assigned to variables `UI_LOGO`, `UI_CHAT_LOGO` or `UI_FAVICON` should be added to the [public](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/frontend/public) folder before building the project. The Vite build process will automatically copy theses files to the [static](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/static) folder on each build of the frontend. The corresponding environment variables should then be set using a relative path such as `static/<my image filename>` to ensure that the frontend code can find them.
 

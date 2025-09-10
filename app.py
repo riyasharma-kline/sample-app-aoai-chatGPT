@@ -1,3 +1,7 @@
+import zipfile
+import io
+import requests
+from docx import Document
 import copy
 import json
 import os
@@ -321,6 +325,224 @@ async def translate():
             os.remove(input_path)
 
 
+@bp.route("/translate-images", methods=["POST"])
+async def translate_images():
+    """Handle translation of uploaded images, return zip of docx files."""
+    try:
+        form = await request.form
+        files = (await request.files).getlist("images")
+        target_language = form.get("language")
+        if not files or not target_language:
+            return jsonify({"error": "Missing images or language"}), 400
+
+        temp_dir = tempfile.mkdtemp()
+        docx_paths = []
+        for file in files:
+            # Sanitize filename to avoid subdirectory issues
+            safe_filename = os.path.basename(file.filename)
+            img_path = os.path.join(temp_dir, safe_filename)
+            await file.save(img_path)
+
+            with open(img_path, "rb") as img_file:
+                img_bytes = img_file.read()
+            api_url = f"{AZURE_ENDPOINT}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
+            import base64
+            from imghdr import what
+            img_format = what(img_path)
+            if img_format == "jpeg":
+                mime_type = "image/jpeg"
+            elif img_format == "png":
+                mime_type = "image/png"
+            else:
+                mime_type = "image/png" 
+
+            img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+            # Removing any accidental line breaks
+            img_b64 = img_b64.replace("\n", "")
+            body = {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            f"You are a professional translator specializing in {target_language}. "
+                            f"If all the visible text in the image is already in {target_language}, DO NOT change or rewrite it. "
+                            f"Just extract and return the text as-is. Otherwise, translate all visible text to {target_language}."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": f"Translate all visible text in this image to {target_language}. Give back only the result text without any additional information."},
+                            {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{img_b64}"}}
+                        ]
+                    }
+                ],
+                "max_tokens": 4000,
+                "temperature": 0,
+                "stream": False,
+            }
+            try:
+                response = requests.post(api_url, headers=HEADERS, json=body, timeout=60)
+                data = response.json()
+                if response.status_code == 200 and "choices" in data:
+                    translated_text = data["choices"][0]["message"]["content"]
+                else:
+                    logging.error(f"OpenAI Vision API error for {safe_filename}: {data}")
+                    translated_text = "Error: Could not extract/translate text."
+            except Exception as e:
+                logging.error(f"OpenAI Vision API request error for {safe_filename}: {e}")
+                translated_text = "Error: Could not extract/translate text."
+
+            # Creating docx file
+            doc = Document()
+            doc.add_paragraph(translated_text)
+            docx_name = os.path.splitext(safe_filename)[0] + f"_{target_language}.docx"
+            docx_path = os.path.join(temp_dir, docx_name)
+            doc.save(docx_path)
+            docx_paths.append((docx_name, docx_path))
+
+        # Zipping all docx files
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for docx_name, docx_path in docx_paths:
+                zipf.write(docx_path, arcname=docx_name)
+        zip_buffer.seek(0)
+
+        # Cleanup temp files to save space
+        for _, docx_path in docx_paths:
+            if os.path.exists(docx_path):
+                os.remove(docx_path)
+        for file in files:
+            safe_filename = os.path.basename(file.filename)
+            img_path = os.path.join(temp_dir, safe_filename)
+            if os.path.exists(img_path):
+                os.remove(img_path)
+        os.rmdir(temp_dir)
+
+        return await send_file(
+            zip_buffer,
+            mimetype="application/zip",
+            as_attachment=True,
+            attachment_filename=f"translated_images_{target_language}.zip"
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@bp.route("/tidy", methods=["POST"])
+async def tidy():
+    """Handle tidying of uploaded PPTX files."""
+    try:
+        form = await request.form
+        file = (await request.files).get("file")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pptx") as temp_input:
+            await file.save(temp_input.name)
+            input_path = temp_input.name
+
+        output_path = input_path.replace(".pptx", f"_tidied.pptx")
+
+        loop = asyncio.get_event_loop()
+
+        # Translate PPTX (splitting into batches to avoid exceeding token limits)
+        await loop.run_in_executor(
+            None, tidy_pptx, input_path, output_path
+        )
+    
+        return await send_file(output_path, as_attachment=True)
+
+    except Exception as e:
+        print(f"❌ Tidying Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'input_path' in locals() and os.path.exists(input_path):
+            os.remove(input_path)
+
+def tidy_pptx(input_pptx, output_pptx):
+    prs = Presentation(input_pptx)
+    skipped_slides = []
+
+    for slide_index, slide in enumerate(prs.slides):
+        text_items = [] 
+
+        # Collect all translatable text chunks from slide
+        for shape in slide.shapes:
+            collect_text_items_from_shape(shape, text_items)
+
+        # Translate in small batches and replace immediately
+        batch = []
+        current_tokens = 0
+
+        for text, ref in text_items:
+            tokens = estimate_token_count(text)
+            if tokens > TOKEN_LIMIT:
+                continue
+            if current_tokens + tokens > TOKEN_LIMIT:
+                translated = tidy_text_batch([t for t, _ in batch])
+                if translated:
+                    for (_, obj), trans in zip(batch, translated):
+                        replace_text_in_ref(obj, trans)
+                else:
+                    skipped_slides.append(slide_index + 1)
+
+                batch = []
+                current_tokens = 0
+
+            batch.append((text, ref))
+            current_tokens += tokens
+
+        if batch:
+            translated = tidy_text_batch([t for t, _ in batch])
+            if translated:
+                for (_, obj), trans in zip(batch, translated):
+                    replace_text_in_ref(obj, trans)
+            else:
+                skipped_slides.append(slide_index + 1)
+
+    prs.save(output_pptx)
+    return skipped_slides
+
+def tidy_text_batch(texts):
+    texts = [text.strip() for text in texts if text.strip()]
+    if not texts:
+        return texts
+
+    api_url = f"{AZURE_ENDPOINT}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
+    combined_text = "\n\n".join(texts)
+
+    token_count = estimate_token_count(combined_text)
+    if token_count > TOKEN_LIMIT:
+        return None
+
+
+    body = {
+        "messages": [
+            {"role": "system", "content": (
+                f"You are a professional editor specializing in tidying up text. "
+                "Tidy the following text very accurately. Solve any grammatical errors, improve clarity, and enhance overall readability. "
+                "Do not alter numbers, formatting, or structure.\n\n"
+            )},
+            {"role": "user", "content": f"Tidy this text:\n{combined_text}"}
+        ],
+        "max_tokens": 4000,
+        "temperature": 0,
+        "stream": False,
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(api_url, headers=HEADERS, json=body, timeout=30)
+            data = response.json()
+            if response.status_code == 200 and "choices" in data:
+                return data["choices"][0]["message"]["content"].split("\n\n")
+            else:
+                print(f"API Error: {data}")
+        except requests.exceptions.RequestException as e:
+            print(f"Request Error (Attempt {attempt + 1}): {e}")
+
+    print("Tidying failed after retries.")
+    return None
+
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
@@ -382,13 +604,29 @@ frontend_settings = {
         "chat_description": app_settings.ui.chat_description,
         "show_share_button": app_settings.ui.show_share_button,
         "show_chat_history_button": app_settings.ui.show_chat_history_button,
+        # Translate Tab
         "translate_tab_enable": app_settings.ui.translate_tab_enable,
         "translate_tab_title": app_settings.ui.translate_tab_title,
         "translate_tab_description_line1": app_settings.ui.translate_tab_description_line1,
         "translate_tab_description_line2": app_settings.ui.translate_tab_description_line2,
-        "translate_tab_slide_limit_enable": app_settings.ui.translate_tab_slide_limit_enable,
-        "translate_tab_slide_limit": app_settings.ui.translate_tab_slide_limit,
         "translate_tab_languages": app_settings.ui.translate_tab_languages,
+        
+        # Slide Translation Tab
+        "translate_tab_slide_limit": app_settings.ui.translate_tab_slide_limit,
+        "translate_tab_slide_upload_container_text": app_settings.ui.translate_tab_slide_upload_container_text,
+       
+        # Image Translation Tab
+        "translate_tab_image_upload_limit": app_settings.ui.translate_tab_image_upload_limit,
+        "translate_tab_image_upload_container_text": app_settings.ui.translate_tab_image_upload_container_text,
+        
+        # Tidy Tab
+        "tidy_tab_enable": app_settings.ui.tidy_tab_enable,
+        "tidy_tab_title": app_settings.ui.tidy_tab_title,
+        "tidy_tab_description_line1": app_settings.ui.tidy_tab_description_line1,
+        "tidy_tab_description_line2": app_settings.ui.tidy_tab_description_line2,
+        "tidy_tab_slide_limit": app_settings.ui.tidy_tab_slide_limit,
+        "tidy_tab_slide_upload_container_text": app_settings.ui.tidy_tab_slide_upload_container_text,
+        
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
     "oyd_enabled": app_settings.base_settings.datasource_type,

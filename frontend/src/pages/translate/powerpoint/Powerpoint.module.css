@@ -1,0 +1,177 @@
+.chatEmptyState {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.chatIcon {
+  height: 62px;
+  width: auto;
+}
+.chatEmptyState {
+  left: 0px;
+}
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.translateCard {
+  max-width: 500px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: #f9f9f9;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+.uploadIconImage {
+  width: 106px;
+  height: auto;
+}
+.uploadBox {
+  border: 2px dashed #d0d0d0;
+  border-radius: 12px;
+  padding: 40px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.uploadBox:hover {
+  background-color: #f0f8ff;
+}
+
+.uploadIcon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.chooseButton {
+  margin-top: 16px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #e6ebf0;
+  color: #0f6cbd;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.translationBox {
+  text-align: center;
+}
+
+.pptPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pptIcon {
+  width: 106px;
+  height: auto;
+}
+
+.languageDropdown {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #a9a7a7;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  width: 60px;
+  height: 45px;
+  background-color: #f0f0f0;
+  color: #444;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 2px;
+}
+.translateButton {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  width: 60px;
+  height: 45px;
+  background-color: #00aaff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 170, 255, 0.3);
+  position: relative;
+  top: 1px;
+}
+.translateButton:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.cancelButton:hover {
+  background-color: #e0e0e0;
+}
+
+.translateButton:hover {
+  background-color: #008fcc;
+}
+
+.downloadLink {
+  display: contents;
+  justify-content: center;
+  text-decoration: none;
+  margin: 30px auto;
+  width: 100%;
+  max-width: 500px;
+}
+
+.chatRight {
+  flex: 1;
+  min-width: 320px;
+  max-width: 540px;
+}
+
+.spinner {
+  margin-left: 8px;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}

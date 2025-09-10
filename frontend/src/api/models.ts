@@ -131,13 +131,29 @@ export type UI = {
   chat_logo?: string
   show_share_button?: boolean
   show_chat_history_button?: boolean
+
+  // Translate Tab
   translate_tab_enable?: boolean
   translate_tab_title?: string
   translate_tab_description_line1?: string
   translate_tab_description_line2?: string
-  translate_tab_slide_limit_enable?: boolean
-  translate_tab_slide_limit?: number
   translate_tab_languages?: string[]
+  
+  // Slide Translation Tab
+  translate_tab_slide_upload_container_text?: string
+  translate_tab_slide_limit?: number
+ 
+  // Image Translation Tab
+  translate_tab_image_upload_container_text?: string
+  translate_tab_image_upload_limit?: number
+
+  // Tidy Tab
+  tidy_tab_enable?: boolean
+  tidy_tab_title?: string
+  tidy_tab_description_line1?: string
+  tidy_tab_description_line2?: string
+  tidy_tab_slide_limit?: number
+  tidy_tab_slide_upload_container_text?: string
 }
 
 export type FrontendSettings = {

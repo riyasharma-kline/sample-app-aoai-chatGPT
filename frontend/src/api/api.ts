@@ -33,6 +33,35 @@ export async function translateApi(file: File, language: string, abortSignal?: A
   return await response.blob()
 }
 
+// Upload multiple images and language, get zip file of translated docx files
+export async function translateImagesApi(formData: FormData, abortSignal?: AbortSignal): Promise<Blob> {
+  const response = await fetch('/translate-images', {
+    method: 'POST',
+    body: formData,
+    signal: abortSignal
+  })
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Image translation failed: ${response.status} ${errorText}`)
+  }
+  return await response.blob()
+}
+
+//Upload pptx file, get back a tidied pptx file
+export async function tidyApi(file: File, abortSignal?: AbortSignal): Promise<Blob> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await fetch('/tidy', {
+    method: 'POST',    body: formData,
+    signal: abortSignal 
+  })
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Tidying file failed: ${response.status} ${errorText}`)
+  }
+  return await response.blob()
+}
+
 export async function getUserInfo(): Promise<UserInfo[]> {
   const response = await fetch('/.auth/me')
   if (!response.ok) {
