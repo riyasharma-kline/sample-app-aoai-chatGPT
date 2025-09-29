@@ -547,7 +547,7 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.config['MAX_CONTENT_LENGTH'] = 80* 1024 * 1024  # Max input file limit is 80 MB
+    app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # Max input file limit is 500 MB
     
     @app.before_serving
     async def init():
