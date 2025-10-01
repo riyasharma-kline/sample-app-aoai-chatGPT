@@ -517,15 +517,26 @@ def tidy_text_batch(texts):
 
     body = {
         "messages": [
-            {"role": "system", "content": (
-                f"You are a professional editor specializing in tidying up text. "
-                "Tidy the following text very accurately. Solve any grammatical errors, improve clarity, and enhance overall readability. "
-                "Do not alter numbers, formatting, or structure.\n\n"
-            )},
-            {"role": "user", "content": f"Tidy this text:\n{combined_text}"}
+            {
+                "role": "system",
+                "content": (
+                    "You are a professional editor specializing in tidying up text for presentation slides. "
+                    "Your task is ONLY to correct grammar, spelling, punctuation, and clarity. "
+                    "Do NOT merge, split, rephrase, or duplicate any sentences or bullet points. "
+                    "Do NOT add new content. Just give back cleaned text as response. "
+                    "Preserve numbers, formatting, indentation, structure, and the word 'Kline' exactly as they are. "
+                    "If a sentence or bullet is already correct, leave it unchanged."
+                )
+            },
+            {
+                "role": "user",
+                "content": f"Clean the following text carefully, keeping the original structure intact:\n{combined_text}"
+            }
         ],
         "max_tokens": 4000,
         "temperature": 0,
+        "frequency_penalty": 1.2,
+        "presence_penalty": 0,
         "stream": False,
     }
 
