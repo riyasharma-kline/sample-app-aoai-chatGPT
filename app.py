@@ -473,9 +473,9 @@ def translate_pdf_file(input_pdf, output_pdf, target_language):
     BASE_DIR = Path(__file__).resolve().parent
 
     FONT_PATHS = {
-        "default": str(BASE_DIR / "static/assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf"),
-        "chinese": str(BASE_DIR / "static/assets/fonts/Noto_Sans_SC/static/NotoSansSC-Regular.ttf"),
-        "japanese": str(BASE_DIR / "static/assets/fonts/Noto_Sans_JP/static/NotoSansJP-Regular.ttf"),
+        "default": str(BASE_DIR / "backend/assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf"),
+        "chinese": str(BASE_DIR / "backend/assets/fonts/Noto_Sans_SC/static/NotoSansSC-Regular.ttf"),
+        "japanese": str(BASE_DIR / "backend/assets/fonts/Noto_Sans_JP/static/NotoSansJP-Regular.ttf"),
     }
 
     def is_rtl_text(text):
