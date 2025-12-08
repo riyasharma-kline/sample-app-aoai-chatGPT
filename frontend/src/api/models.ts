@@ -147,6 +147,10 @@ export type UI = {
   translate_tab_image_upload_container_text?: string
   translate_tab_image_upload_limit?: number
 
+  // PDF Translation Tab
+  translate_tab_pdf_upload_container_text?: string
+  translate_tab_pdf_upload_limit?: number
+
   // Tidy Tab
   tidy_tab_enable?: boolean
   tidy_tab_title?: string

@@ -72,6 +72,10 @@ class _UiSettings(BaseSettings):
     translate_tab_image_upload_limit: int = 50
     translate_tab_image_upload_container_text: str = "Upload a folder of images for text translation. Only PNG, JPG, and JPEG files will be selected. Maximum of 50 images per folder allowed."
     
+    # PDF Translation Tab
+    translate_tab_pdf_upload_limit: int = 50
+    translate_tab_pdf_upload_container_text: str = "Upload a PDF to Translate it."
+    
     # Tidy Tab
     tidy_tab_enable: bool = False
     tidy_tab_title: str = "Tidy it the Kline way"

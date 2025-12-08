@@ -504,6 +504,8 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 |UI_TRANSLATE_TAB_SLIDE_UPLOAD_CONTAINER_TEXT|No|Upload a PowerPoint to Translate it|This is the text shown on the right side upload container in the Translate tab.|
 |UI_TRANSLATE_TAB_IMAGE_UPLOAD_LIMIT|No|50|Sets the maximum number of images allowed per folder upload for translation in the Translate tab.|
 |UI_TRANSLATE_TAB_IMAGE_UPLOAD_CONTAINER_TEXT|No|Upload a folder of images for text translation. Only PNG, JPG, and JPEG files will be selected. Maximum of 50 images per folder allowed.|Upload a PowerPoint to Translate it|This is the text shown on the right side upload container in the Translate tab.|
+|UI_TRANSLATE_TAB_PDF_UPLOAD_LIMIT|No|50|Sets the maximum number of pages allowed per pdf for translation in the Translate tab.|
+|UI_TRANSLATE_TAB_PDF_UPLOAD_CONTAINER_TEXT|No|Upload a PDF to Translate it.|This is the text shown on the right side upload container in the Translate tab.|
 |UI_TIDY_TAB_ENABLE|No|False|To enable the Tidy tab set to True.|
 |UI_TIDY_TAB_TITLE|No|Tidy it the Kline way|Title displayed on the Tidy tab.|
 |UI_TIDY_TAB_DESCRIPTION_LINE1|No|Easily tidy up your presentation with the power of AI|First line of description shown on the Tidy tab.|

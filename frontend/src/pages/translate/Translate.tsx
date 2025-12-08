@@ -6,13 +6,15 @@ import { getUserInfo } from '../../api'
 import { AppStateContext } from '../../state/AppProvider'
 import Contoso from '../../assets/Contoso.svg'
 import PPTIcon from '../../assets/ppt-icon.png'
+import PDFIcon from '../../assets/pdf-icon.png'
 import ImageFolderIcon from '../../assets/imagefoldericon.png'
 import Powerpoint from './powerpoint/Powerpoint'
 import ImageFolder from './imageFolder/ImageFolder'
+import Pdf from './pdf/Pdf'
 import 'react-toastify/dist/ReactToastify.css'
 
 const Translate = () => {
-  const [translateType, setTranslateType] = useState<'powerpoint' | 'image folder'>('powerpoint')
+  const [translateType, setTranslateType] = useState<'powerpoint' | 'image folder' | 'pdf'>('powerpoint')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const appStateContext = useContext(AppStateContext)
   const [translate_tab_description_line1, setTranslateTabDescriptionLine1] = useState<string | undefined>(undefined)
@@ -102,13 +104,17 @@ const Translate = () => {
                 <div className={styles.dropdownWrapper}>
                   <div className={styles.dropdownRelative} ref={dropdownRef}>
                     <div className={styles.dropdownButton} onClick={() => setDropdownOpen(v => !v)}>
-                      {translateType === 'powerpoint' ? (
+                      {translateType === 'powerpoint' && (
                         <img src={PPTIcon} alt="PowerPoint" className={styles.dropdownIcon} />
-                      ) : (
+                      )}
+                      {translateType === 'image folder' && (
                         <img src={ImageFolderIcon} alt="Image Folder" className={styles.dropdownIcon} />
                       )}
+                      {translateType === 'pdf' && <img src={PDFIcon} alt="PDF" className={styles.dropdownIcon} />}
                       <span className={styles.dropdownLabel}>
-                        {translateType === 'powerpoint' ? 'PowerPoint' : 'Image Folder'}
+                        {translateType === 'powerpoint' && 'PowerPoint'}
+                        {translateType === 'image folder' && 'Image Folder'}
+                        {translateType === 'pdf' && 'PDF'}
                       </span>
                       <span className={styles.dropdownArrow} aria-hidden="true">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -146,6 +152,17 @@ const Translate = () => {
                           <img src={ImageFolderIcon} alt="Image Folder" className={styles.dropdownIcon} />
                           <span className={styles.dropdownLabel}>Image Folder</span>
                         </div>
+                        <div
+                          className={styles.dropdownMenuItem}
+                          onClick={() => {
+                            setTranslateType('pdf')
+                            setDropdownOpen(false)
+                          }}
+                          onMouseOver={e => e.currentTarget.classList.add(styles.dropdownMenuItemHover)}
+                          onMouseOut={e => e.currentTarget.classList.remove(styles.dropdownMenuItemHover)}>
+                          <img src={PDFIcon} alt="PDF" className={styles.dropdownIcon} />
+                          <span className={styles.dropdownLabel}>PDF</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -158,7 +175,11 @@ const Translate = () => {
               </h2>
             </Stack>
           </div>
-          <div className={styles.chatRight}>{translateType === 'powerpoint' ? <Powerpoint /> : <ImageFolder />}</div>
+          <div className={styles.chatRight}>
+            {translateType === 'powerpoint' && <Powerpoint />}
+            {translateType === 'image folder' && <ImageFolder />}
+            {translateType === 'pdf' && <Pdf />}
+          </div>
         </div>
       )}
     </div>

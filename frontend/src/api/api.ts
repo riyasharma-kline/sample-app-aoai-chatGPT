@@ -33,6 +33,23 @@ export async function translateApi(file: File, language: string, abortSignal?: A
   return await response.blob()
 }
 
+export async function translatePdfApi(file: File, language: string, abortSignal?: AbortSignal): Promise<Blob> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('language', language)
+
+  const response = await fetch('/translate-pdf', {
+    method: 'POST',    body: formData,
+    signal: abortSignal 
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Translation failed: ${response.status} ${errorText}`)
+  }
+  return await response.blob()
+}
+
 // Upload multiple images and language, get zip file of translated docx files
 export async function translateImagesApi(formData: FormData, abortSignal?: AbortSignal): Promise<Blob> {
   const response = await fetch('/translate-images', {

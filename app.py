@@ -9,6 +9,12 @@ import logging
 import uuid
 import httpx
 import asyncio
+from flask import request, jsonify, send_file
+import fitz
+import unicodedata
+from math import ceil
+from pathlib import Path
+import re
 from quart import (
     Blueprint,
     Quart,
@@ -121,7 +127,7 @@ def translate_text_batch(texts, target_language):
         "messages": [
             {"role": "system", "content": (
                 f"You are a professional translator specializing in {target_language}. "
-                "Translate the following English text very accurately. "
+                "Translate the following text very accurately. "
                 "Do not alter numbers, formatting, or structure. Do not translate 'Kline' word. Keep it as it is.\n\n"
             )},
             {"role": "user", "content": f"Translate this into {target_language}:\n{combined_text}"}
@@ -428,6 +434,247 @@ async def translate_images():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@bp.route("/translate-pdf", methods=["POST"])
+async def translate_pdf():
+    try:
+        form = await request.form
+        file = (await request.files).get("file")
+        target_language = form.get("language")
+        if not file or not target_language:
+            return jsonify({"error": "Missing file or language"}), 400
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_input:
+            await file.save(temp_input.name)
+            input_path = temp_input.name
+        output_path = input_path.replace(".pdf", f"_{target_language}.pdf")
+        loop = asyncio.get_event_loop()
+        try:
+            await loop.run_in_executor(None, translate_pdf_file, input_path, output_path, target_language)
+        except Exception:
+            raise
+        if not os.path.exists(output_path):
+            return jsonify({"error": "Failed to generate translated PDF."}), 500
+        try:
+            response = await send_file(output_path, as_attachment=True)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        if os.path.exists(input_path):
+            try:
+                os.remove(input_path)
+            except Exception:
+                pass
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def translate_pdf_file(input_pdf, output_pdf, target_language):
+    doc = fitz.open(input_pdf)
+    BASE_DIR = Path(__file__).resolve().parent
+
+    FONT_PATHS = {
+        "default": str(BASE_DIR / "static/assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf"),
+        "chinese": str(BASE_DIR / "static/assets/fonts/Noto_Sans_SC/static/NotoSansSC-Regular.ttf"),
+        "japanese": str(BASE_DIR / "static/assets/fonts/Noto_Sans_JP/static/NotoSansJP-Regular.ttf"),
+    }
+
+    def is_rtl_text(text):
+        return any(unicodedata.bidirectional(ch) in ("R", "AL", "RLE", "RLO", "RLI") for ch in text)
+
+    def inflate_rect(rect, px=1.0):
+        return fitz.Rect(rect.x0 - px, rect.y0 - px, rect.x1 + px, rect.y1 + px)
+
+    def rects_overlap(r1, r2, tol=1.0):
+        return not (r1.x1 + tol < r2.x0 or r1.x0 - tol > r2.x1 or r1.y1 + tol < r2.y0 or r1.y0 - tol > r2.y1)
+
+    def merge_overlapping_rects(rects):
+        if not rects:
+            return []
+        rects = [fitz.Rect(r) for r in rects]
+        merged = []
+        used = [False] * len(rects)
+        for i, r in enumerate(rects):
+            if used[i]:
+                continue
+            cur = fitz.Rect(r)
+            used[i] = True
+            changed = True
+            while changed:
+                changed = False
+                for j, r2 in enumerate(rects):
+                    if used[j]:
+                        continue
+                    if rects_overlap(cur, r2):
+                        cur |= r2
+                        used[j] = True
+                        changed = True
+            merged.append(cur)
+        return merged
+
+    def insert_fitted_text(page, rect, text, fontname, fontfile, fontsize, color, align, min_fontsize=6):
+        fitted = False
+        start = max(int(ceil(fontsize)), min_fontsize)
+        for size in range(start, min_fontsize - 1, -1):
+            try:
+                chars_inserted = page.insert_textbox(
+                    rect, text, fontname=fontname, fontfile=fontfile,
+                    fontsize=size, color=color, align=align
+                )
+                if chars_inserted > 0:
+                    fitted = True
+                    break
+            except Exception as e:
+                logging.debug(f"insert_textbox failed at size {size}: {e}")
+        if not fitted:
+            try:
+                page.insert_text(rect.tl, text, fontname=fontname, fontfile=fontfile,
+                                 fontsize=min_fontsize, color=color)
+            except Exception as e:
+                logging.warning(f"Final fallback insert_text failed: {e}")
+
+    def normalize_text_for_pdf(text):
+        replacements = {"‾": "-", "–": "-"}
+        for k, v in replacements.items():
+            text = text.replace(k, v)
+        return text
+
+    # ---------- Register fonts ----------
+    font_mapping = {
+        "default": "NotoSans",
+        "chinese": "NotoSansSC",
+        "japanese": "NotoSansJP",
+    }
+    for lang_key, fpath in FONT_PATHS.items():
+        fontname = font_mapping[lang_key]
+        try:
+            doc[0].insert_font(fontname=fontname, fontfile=fpath)
+        except Exception:
+            pass
+
+    for page_num, page in enumerate(doc):
+        collected = []
+
+        # Extract spans
+        for block in page.get_text("dict").get("blocks", []):
+            for line in block.get("lines", []):
+                for span in line.get("spans", []):
+                    txt = span.get("text", "").strip()
+                    if txt:
+                        collected.append({
+                            "text": txt,
+                            "bbox": fitz.Rect(span["bbox"]),
+                            "size": span.get("size", 12),
+                            "color_int": span.get("color", 0),
+                            "font": span.get("font", ""),
+                        })
+
+        if not collected:
+            continue
+
+        rects_for_redaction = [inflate_rect(it["bbox"], px=0.8) for it in collected]
+        merged_redaction_rects = merge_overlapping_rects(rects_for_redaction)
+
+        texts_to_translate = [item["text"] for item in collected]
+
+        # ---------- Safe recursive batch translation ----------
+        BATCH_SIZE = 50
+
+        def safe_translate_batch(batch):
+            if not batch:
+                return []
+            if len(batch) == 1:
+                return translate_pdf_text_batch(batch, target_language)
+            translations = translate_pdf_text_batch(batch, target_language)
+            if len(translations) != len(batch):
+                mid = len(batch) // 2
+                return safe_translate_batch(batch[:mid]) + safe_translate_batch(batch[mid:])
+            return translations
+
+        translated_texts = []
+        for i in range(0, len(texts_to_translate), BATCH_SIZE):
+            batch = texts_to_translate[i:i + BATCH_SIZE]
+            translated_texts.extend(safe_translate_batch(batch))
+
+        # Apply redaction
+        for r in merged_redaction_rects:
+            try:
+                page.add_redact_annot(r, fill=None)
+            except Exception:
+                pass
+        try:
+            page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE)
+        except Exception:
+            pass
+
+        # Reinsert translated text
+        for idx, item in enumerate(collected):
+            translated = normalize_text_for_pdf(translated_texts[idx])
+            rect = item["bbox"]
+            fontsize = item.get("size", 12)
+            color_int = item.get("color_int", 0)
+            r = (color_int >> 16) & 255
+            g = (color_int >> 8) & 255
+            b = color_int & 255
+            color = (r / 255, g / 255, b / 255)
+            align = fitz.TEXT_ALIGN_RIGHT if is_rtl_text(translated) else fitz.TEXT_ALIGN_LEFT
+            lang_lower = target_language.lower()
+            if lang_lower.startswith(("zh", "chinese")):
+                fontfile = FONT_PATHS.get("chinese")
+                fontname = "NotoSansSC"
+            elif lang_lower.startswith(("ja", "jp")):
+                fontfile = FONT_PATHS.get("japanese")
+                fontname = "NotoSansJP"
+            else:
+                fontfile = FONT_PATHS.get("default")
+                fontname = "NotoSans"
+
+            insert_fitted_text(page, rect, translated, fontname, fontfile, fontsize, color, align, min_fontsize=6)
+
+    # Save PDF
+    try:
+        doc.save(output_pdf)
+    except Exception:
+        raise
+
+# ---------- marker-based translation ----------
+def translate_pdf_text_batch(texts, target_language):
+    texts = [t.strip() for t in texts]
+    if not texts:
+        return texts
+
+    wrapped = [f"[ITEM_{i}]{texts[i]}[/ITEM_{i}]" for i in range(len(texts))]
+    prompt_text = "\n".join(wrapped)
+    api_url = f"{AZURE_ENDPOINT}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
+    body = {
+        "messages": [
+            {"role": "system", "content": f"Translate text to {target_language}. Output each item using the [ITEM_i]...[/ITEM_i] markers, nothing else."},
+            {"role": "user", "content": f"Translate ALL items and preserve the [ITEM_i] markers:\n{prompt_text}"}
+        ],
+        "max_tokens": 4000,
+        "temperature": 0,
+        "stream": False,
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(api_url, headers=HEADERS, json=body, timeout=30)
+            data = response.json()
+            if response.status_code == 200 and "choices" in data:
+                raw = data["choices"][0]["message"]["content"]
+                translations = []
+                for i in range(len(texts)):
+                    pattern = re.compile(rf"\[ITEM_{i}\](.*?)\[/ITEM_{i}\]", re.DOTALL)
+                    match = pattern.search(raw)
+                    translations.append(match.group(1).strip() if match else texts[i])
+                return translations
+            else:
+                logging.warning(f"API error: {data}")
+        except requests.exceptions.RequestException as e:
+            logging.warning(f"Request error on attempt {attempt + 1}: {e}")
+
+    logging.warning("Falling back to original text after retries.")
+    return texts
+
 @bp.route("/tidy", methods=["POST"])
 async def tidy():
     """Handle tidying of uploaded PPTX files."""
@@ -629,6 +876,10 @@ frontend_settings = {
         # Image Translation Tab
         "translate_tab_image_upload_limit": app_settings.ui.translate_tab_image_upload_limit,
         "translate_tab_image_upload_container_text": app_settings.ui.translate_tab_image_upload_container_text,
+        
+        # PDF Translation Tab
+        "translate_tab_pdf_upload_limit": app_settings.ui.translate_tab_pdf_upload_limit,
+        "translate_tab_pdf_upload_container_text": app_settings.ui.translate_tab_pdf_upload_container_text,
         
         # Tidy Tab
         "tidy_tab_enable": app_settings.ui.tidy_tab_enable,

@@ -13,6 +13,25 @@ echo.
 echo Restoring frontend npm packages
 echo.
 cd frontend
+REM Clean up node_modules and lock file to ensure a fresh install
+if exist node_modules rmdir /s /q node_modules
+if exist package-lock.json del package-lock.json
+
+REM Install npm-force-resolutions if not present
+call npm install npm-force-resolutions --save-dev
+if "%errorlevel%" neq "0" (
+    echo Failed to install npm-force-resolutions
+    exit /B %errorlevel%
+)
+
+REM Run npm-force-resolutions to enforce resolutions in package.json
+call npx npm-force-resolutions
+if "%errorlevel%" neq "0" (
+    echo Failed to run npm-force-resolutions
+    exit /B %errorlevel%
+)
+
+REM Install all frontend dependencies
 call npm install
 if "%errorlevel%" neq "0" (
     echo Failed to restore frontend npm packages
