@@ -34,13 +34,27 @@ export const QuestionInput = ({ onSend, onInputChange, disabled, placeholder, cl
       await convertToBase64(file);
     }
   };
+  // Copying text from OneNote and Powerpoint often includes some image data as well
+  // If text is present, we let the text to be pasted and ignore images
+  // If no text is present, we look for image data and convert the first image found to base64
+  const handlePaste = async (
+    event: React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
 
-  // Handle image paste
-  const handlePaste = async (event: React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (event.clipboardData && event.clipboardData.items) {
-      for (let i = 0; i < event.clipboardData.items.length; i++) {
-        const item = event.clipboardData.items[i];
-        if (item.type.indexOf('image') !== -1) {
+    const text = clipboardData.getData('text/plain');
+
+    //If text exists, ignore images
+    if (text && text.trim().length > 0) {
+      return;
+    }
+
+    //Only handle image paste when NO text is present
+    if (clipboardData.items) {
+      for (let i = 0; i < clipboardData.items.length; i++) {
+        const item = clipboardData.items[i];
+        if (item.type.startsWith('image')) {
           const file = item.getAsFile();
           if (file) {
             event.preventDefault();
@@ -123,7 +137,8 @@ export const QuestionInput = ({ onSend, onInputChange, disabled, placeholder, cl
   return (
     <Stack horizontal className={styles.questionInputContainer} style={{height: Math.min(200, linesRef.current * 20)<120?'120px': `${Math.min(200, linesRef.current * 20)+12}px`}}>
       <TextField
-        className={styles.questionInputTextArea}
+        className={`${styles.questionInputTextArea} ${base64Image ? styles.withImage : ''
+          }`}
         placeholder={placeholder}
         multiline
         resizable={false}
