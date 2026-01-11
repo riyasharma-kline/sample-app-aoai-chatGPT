@@ -5,7 +5,7 @@ import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
-import uuid from 'react-uuid'
+const uuid = () => crypto.randomUUID();
 import { isEmpty } from 'lodash'
 import DOMPurify from 'dompurify'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'

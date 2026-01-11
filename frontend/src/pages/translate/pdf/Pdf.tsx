@@ -11,9 +11,8 @@ import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Document } from 'react-pdf'
 import { pdfjs } from 'react-pdf'
-import pkg from '../../../../package.json'
-const pdfjsVersion = pkg.dependencies['pdfjs-dist']
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`
+// Set the workerSrc property for pdfjs. This is required for pdfjs to count pdf pages correctly.
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 const Pdf = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)

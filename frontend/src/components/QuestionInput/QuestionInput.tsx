@@ -35,6 +35,23 @@ export const QuestionInput = ({ onSend, onInputChange, disabled, placeholder, cl
     }
   };
 
+  // Handle image paste
+  const handlePaste = async (event: React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (event.clipboardData && event.clipboardData.items) {
+      for (let i = 0; i < event.clipboardData.items.length; i++) {
+        const item = event.clipboardData.items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            event.preventDefault();
+            await convertToBase64(file);
+            break;
+          }
+        }
+      }
+    }
+  };
+
   const convertToBase64 = async (file: Blob) => {
     try {
       const resizedBase64 = await resizeImage(file, 800, 800);
@@ -114,6 +131,7 @@ export const QuestionInput = ({ onSend, onInputChange, disabled, placeholder, cl
         value={question}
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
+        onPaste={handlePaste}
         autoAdjustHeight={false}
         style={{
           width: "auto",
@@ -140,7 +158,20 @@ export const QuestionInput = ({ onSend, onInputChange, disabled, placeholder, cl
             />
           </label>
         </div>)}
-      {base64Image && <img className={styles.uploadedImage} src={base64Image} alt="Uploaded Preview" />}
+      {base64Image && (
+        <div className={styles.uploadedImageContainer}>
+          <button
+            type="button"
+            className={styles.closeImageButton}
+            aria-label="Remove uploaded image"
+            onClick={() => setBase64Image(null)}
+            tabIndex={0}
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <img className={styles.uploadedImage} src={base64Image} alt="Uploaded Preview" />
+        </div>
+      )}
       <div
         className={styles.questionInputSendButtonContainer}
         role="button"
