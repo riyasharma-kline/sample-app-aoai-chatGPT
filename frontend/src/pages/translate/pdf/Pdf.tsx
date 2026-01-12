@@ -120,7 +120,7 @@ const Pdf = () => {
       ) {
         setErrorMessage('Maximum file size exceeded. Please insert a shorter file.')
       } else {
-        setErrorMessage('Error during translation. Please try again later.')
+        setErrorMessage('Error during translation. Please try using a shorter file or try again later.')
       }
     } finally {
       setIsTranslating(false)
