@@ -85,7 +85,8 @@ export type ChatResponse = {
 }
 
 export type ConversationRequest = {
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  writing_style?: string
 }
 
 export type UserInfo = {
@@ -142,7 +143,6 @@ export type UI = {
   // Slide Translation Tab
   translate_tab_slide_upload_container_text?: string
   translate_tab_slide_limit?: number
- 
   // Image Translation Tab
   translate_tab_image_upload_container_text?: string
   translate_tab_image_upload_limit?: number
@@ -158,6 +158,12 @@ export type UI = {
   tidy_tab_description_line2?: string
   tidy_tab_slide_limit?: number
   tidy_tab_slide_upload_container_text?: string
+
+  // Left Side Panel Control
+  left_side_panel_open_by_default?: boolean
+  left_side_panel_heading?: string
+  left_side_panel_icon_hover_text?: string
+  writing_style_options: string[]
 }
 
 export type FrontendSettings = {

@@ -74,6 +74,7 @@ HEADERS = {
 
 GLOSSARY = {
 }
+WRITING_STYLE='Simple' #Default writing style for when not specified in request
 
 def estimate_token_count(text):
     """Estimate the token count of a given text."""
@@ -889,6 +890,11 @@ frontend_settings = {
         "tidy_tab_slide_limit": app_settings.ui.tidy_tab_slide_limit,
         "tidy_tab_slide_upload_container_text": app_settings.ui.tidy_tab_slide_upload_container_text,
         
+        # Left Side Panel Control
+        "left_side_panel_open_by_default": app_settings.ui.left_side_panel_open_by_default,
+        "left_side_panel_heading": app_settings.ui.left_side_panel_heading,
+        "left_side_panel_icon_hover_text": app_settings.ui.left_side_panel_icon_hover_text,
+        "writing_style_options": list(app_settings.search.role_information.keys()),
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
     "oyd_enabled": app_settings.base_settings.datasource_type,
@@ -1030,13 +1036,21 @@ def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
     if not app_settings.datasource:
+        # Use only the selected writing_style's prompt as the system message
+        writing_style = request_body.get("writing_style", WRITING_STYLE)
+        role_information = getattr(app_settings.search, "role_information", {})
+        if isinstance(role_information, str):
+            try:
+                role_information = json.loads(role_information)
+            except Exception:
+                role_information = {WRITING_STYLE: role_information}
+        system_prompt = role_information.get(writing_style, role_information.get(WRITING_STYLE, "You are an AI assistant."))
         messages = [
             {
                 "role": "system",
-                "content": app_settings.azure_openai.system_message
+                "content": system_prompt
             }
         ]
-
     for message in request_messages:
         if message:
             match message["role"]:

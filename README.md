@@ -148,7 +148,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     |AZURE_OPENAI_TOP_P|No|1.0|An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. We recommend setting this to 1.0 when using your data.|
     |AZURE_OPENAI_MAX_TOKENS|No|1000|The maximum number of tokens allowed for the generated answer.|
     |AZURE_OPENAI_STOP_SEQUENCE|No||Up to 4 sequences where the API will stop generating further tokens. Represent these as a string joined with "|", e.g. `"stop1|stop2|stop3"`|
-    |AZURE_OPENAI_SYSTEM_MESSAGE|No|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
+    |AZURE_OPENAI_SYSTEM_MESSAGE|No|{"Simple": "You are an AI assistant that helps people find information."}|A json format of writing styles containing brief description of the role and tone the model should use|
     |AZURE_OPENAI_STREAM|No|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
     |AZURE_OPENAI_EMBEDDING_NAME|Only if using vector search using an Azure OpenAI embedding model||The name of your embedding model deployment if using vector search.
     |MS_DEFENDER_ENABLED|Yes|True|Whether or not the Microsoft Defender for Cloud's threat protection for AI workloads plan is enabled on your subscription or not , for more details [Microsoft Defender for Cloud documentation](https://learn.microsoft.com/azure/defender-for-cloud/gain-end-user-context-ai).|
@@ -512,6 +512,10 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 |UI_TIDY_TAB_DESCRIPTION_LINE2|No|After tidying, please check the downloaded file for font and layout issues|Second line of description shown on the Tidy tab.|
 |UI_TIDY_TAB_SLIDE_LIMIT|No|50|Sets the maximum number of slides allowed per PowerPoint file for tidying in the Tidy tab. If a user uploads a file with more slides than this limit, an error message will be shown.|
 |UI_TIDY_TAB_SLIDE_UPLOAD_CONTAINER_TEXT|No|Upload a PowerPoint to tidy it|This is the text shown on the right side upload container in the Tidy tab.|
+|UI_LEFT_SIDE_PANEL_OPEN_BY_DEFAULT|No|False|For default opening of left side panel|
+|UI_LEFT_SIDE_PANEL_HEADING|No|Settings|Defualt Heading of Left Side Panel|
+|UI_LEFT_SIDE_PANEL_ICON_HOVER_TEXT|No|Open Settings|Default Icon Hover Text of Left Side Panel|
+
 
 Any custom images assigned to variables `UI_LOGO`, `UI_CHAT_LOGO` or `UI_FAVICON` should be added to the [public](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/frontend/public) folder before building the project. The Vite build process will automatically copy theses files to the [static](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/static) folder on each build of the frontend. The corresponding environment variables should then be set using a relative path such as `static/<my image filename>` to ensure that the frontend code can find them.
 

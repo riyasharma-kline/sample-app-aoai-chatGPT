@@ -83,6 +83,12 @@ class _UiSettings(BaseSettings):
     tidy_tab_description_line2: str = "After tidying, please check the downloaded file for font and layout issues"
     tidy_tab_slide_limit: int = 50
     tidy_tab_slide_upload_container_text: str = "Upload a PowerPoint to Tidy it"
+    writing_style_options: List[str] = []
+    
+    # Left Side Panel Control
+    left_side_panel_open_by_default: bool = False
+    left_side_panel_heading: str = "Settings"
+    left_side_panel_icon_hover_text: str = "Open Settings"
     
 
 
@@ -248,10 +254,20 @@ class _SearchCommonSettings(BaseSettings):
     allow_partial_result: bool = False
     include_contexts: Optional[List[str]] = ["citations", "intent"]
     vectorization_dimensions: Optional[int] = None
-    role_information: str = Field(
-        default="You are an AI assistant that helps people find information.",
+    role_information: dict = Field(
+        default_factory=lambda: {"Simple": "You are an AI assistant that helps people find information."},
         validation_alias="AZURE_OPENAI_SYSTEM_MESSAGE"
     )
+    # The role_information field is intended to be a dictionary mapping writing styles to system prompts.  However, to allow for flexibility in how users specify this information in environment variables, we allow it to be specified as a JSON string or as a simple string (in which case it will be used as the default system prompt for all writing styles).
+    @field_validator('role_information', mode='before')
+    @classmethod
+    def parse_role_information(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except Exception:
+                return {"default": v}
+        return v
 
     @field_validator('include_contexts', mode='before')
     @classmethod
