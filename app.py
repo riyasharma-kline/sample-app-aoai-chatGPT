@@ -558,27 +558,32 @@ def translate_pdf_file(input_pdf, output_pdf, target_language):
         # Extract spans
         for block in page.get_text("dict").get("blocks", []):
             for line in block.get("lines", []):
+                line_text = ""
+                line_rect = None
                 for span in line.get("spans", []):
-                    txt = span.get("text", "").strip()
+                    txt = span.get("text", "")
                     if txt:
-                        collected.append({
-                            "text": txt,
-                            "bbox": fitz.Rect(span["bbox"]),
-                            "size": span.get("size", 12),
-                            "color_int": span.get("color", 0),
-                            "font": span.get("font", ""),
-                        })
+                        line_text += txt + " "
+                        rect = fitz.Rect(span["bbox"])
+                        line_rect = rect if line_rect is None else (line_rect | rect)
+                if line_text.strip():
+                    collected.append({
+                        "text": line_text.strip(),
+                        "bbox": line_rect,
+                        "size": span.get("size", 12),
+                        "color_int": span.get("color", 0),
+                        "font": span.get("font", ""),
+                    })
 
         if not collected:
             continue
-
         rects_for_redaction = [inflate_rect(it["bbox"], px=0.8) for it in collected]
         merged_redaction_rects = merge_overlapping_rects(rects_for_redaction)
 
         texts_to_translate = [item["text"] for item in collected]
 
         # ---------- Safe recursive batch translation ----------
-        BATCH_SIZE = 50
+        BATCH_SIZE = 20
 
         def safe_translate_batch(batch):
             if not batch:
@@ -610,7 +615,7 @@ def translate_pdf_file(input_pdf, output_pdf, target_language):
         # Reinsert translated text
         for idx, item in enumerate(collected):
             translated = normalize_text_for_pdf(translated_texts[idx])
-            rect = item["bbox"]
+            rect = inflate_rect(item["bbox"], px=2.0)
             fontsize = item.get("size", 12)
             color_int = item.get("color_int", 0)
             r = (color_int >> 16) & 255
@@ -648,32 +653,62 @@ def translate_pdf_text_batch(texts, target_language):
     api_url = f"{AZURE_ENDPOINT}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
     body = {
         "messages": [
-            {"role": "system", "content": f"Translate text to {target_language}. Output each item using the [ITEM_i]...[/ITEM_i] markers, nothing else."},
-            {"role": "user", "content": f"Translate ALL items and preserve the [ITEM_i] markers:\n{prompt_text}"}
+            {
+                "role": "system",
+                "content": f"""Translate text to {target_language}.
+                    STRICT RULES:
+                    1. DO NOT remove or modify [ITEM_i] markers
+                    2. DO NOT merge items
+                    3. DO NOT skip any item
+                    4. Output EXACTLY the same number of items
+                    5. Preserve each [ITEM_i]...[/ITEM_i]
+
+                    Return ONLY the marked items. No extra text.
+                    """
+            },
+            {
+                "role": "user",
+                "content": f"""Translate ALL items and preserve markers exactly: {prompt_text}"""
+            }
         ],
         "max_tokens": 4000,
         "temperature": 0,
-        "stream": False,
+        "stream": False
     }
 
     for attempt in range(MAX_RETRIES):
         try:
             response = requests.post(api_url, headers=HEADERS, json=body, timeout=30)
             data = response.json()
-            if response.status_code == 200 and "choices" in data:
-                raw = data["choices"][0]["message"]["content"]
-                translations = []
-                for i in range(len(texts)):
-                    pattern = re.compile(rf"\[ITEM_{i}\](.*?)\[/ITEM_{i}\]", re.DOTALL)
-                    match = pattern.search(raw)
-                    translations.append(match.group(1).strip() if match else texts[i])
-                return translations
-            else:
-                logging.warning(f"API error: {data}")
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"Request error on attempt {attempt + 1}: {e}")
 
-    logging.warning("Falling back to original text after retries.")
+            if response.status_code != 200:
+                logging.error(f"[API ERROR] Status: {response.status_code} | {data}")
+                continue
+            raw = data["choices"][0]["message"]["content"]
+            translations = []
+            failed_items = []
+            for i in range(len(texts)):
+                pattern = re.compile(rf"\[ITEM_{i}\](.*?)\[/ITEM_{i}\]", re.DOTALL)
+                match = pattern.search(raw)
+                if match:
+                    translations.append(match.group(1).strip())
+                else:
+                    translations.append(texts[i])
+                    failed_items.append(i)
+            if failed_items:
+                if len(texts) == 1:
+                    return translations
+                mid = len(texts) // 2
+                return (
+                    translate_pdf_text_batch(texts[:mid], target_language)
+                    + translate_pdf_text_batch(texts[mid:], target_language)
+                )
+
+            return translations
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[REQUEST ERROR] Attempt {attempt + 1}: {e}")
+
+    logging.error("[FINAL FALLBACK] Returning original texts")
     return texts
 
 @bp.route("/tidy", methods=["POST"])

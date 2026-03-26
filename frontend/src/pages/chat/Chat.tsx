@@ -804,7 +804,6 @@ const Chat = () => {
 
   const handleWritingStyleChange = (style: string) => {
     setSelectedWritingStyle(style)
-    console.log('Selected writing style:', style) // Optional: For debugging purposes
   }
 
   return (
