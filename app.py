@@ -133,7 +133,7 @@ def translate_text_batch(texts, target_language):
             )},
             {"role": "user", "content": f"Translate this into {target_language}:\n{combined_text}"}
         ],
-        "max_tokens": 4000,
+        "max_completion_tokens": 4000,
         "temperature": 0,
         "stream": False,
     }
@@ -384,7 +384,7 @@ async def translate_images():
                         ]
                     }
                 ],
-                "max_tokens": 4000,
+                "max_completion_tokens": 4000,
                 "temperature": 0,
                 "stream": False,
             }
@@ -671,7 +671,7 @@ def translate_pdf_text_batch(texts, target_language):
                 "content": f"""Translate ALL items and preserve markers exactly: {prompt_text}"""
             }
         ],
-        "max_tokens": 4000,
+        "max_completion_tokens": 4000,
         "temperature": 0,
         "stream": False
     }
@@ -816,7 +816,7 @@ def tidy_text_batch(texts):
                 "content": f"Clean the following text carefully, keeping the original structure intact:\n{combined_text}"
             }
         ],
-        "max_tokens": 4000,
+        "max_completion_tokens": 4000,
         "temperature": 0,
         "frequency_penalty": 1.2,
         "presence_penalty": 0,
@@ -1121,7 +1121,7 @@ def prepare_model_args(request_body, request_headers):
     model_args = {
         "messages": messages,
         "temperature": app_settings.azure_openai.temperature,
-        "max_tokens": app_settings.azure_openai.max_tokens,
+        "max_completion_tokens": app_settings.azure_openai.max_tokens,
         "top_p": app_settings.azure_openai.top_p,
         "stop": app_settings.azure_openai.stop_sequence,
         "stream": app_settings.azure_openai.stream,
@@ -1887,7 +1887,7 @@ async def generate_title(conversation_messages) -> str:
     try:
         azure_openai_client = await init_openai_client()
         response = await azure_openai_client.chat.completions.create(
-            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
+            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_completion_tokens=64
         )
 
         title = response.choices[0].message.content
